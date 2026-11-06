@@ -1,0 +1,12 @@
+{
+  "name": "mindmap-server",
+  "version": "1.0.0",
+  "description": "MindMap server for fnOS native application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["mindmap", "fnos", "xmind"],
+  "author": "AiPy Team",
+  "license": "MIT"
+}

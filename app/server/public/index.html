@@ -1,0 +1,3207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>思维导图 - MindMap</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.95);
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --link-stroke: #5eead4; /* 截图中清新青翠的转接线色调 */
+      --root-bg: #0f172a;
+      --root-color: #ffffff;
+      --level1-bg: #10b981;
+      --level1-color: #ffffff;
+      --level1-border: #059669;
+      --level2-bg: #ffffff;
+      --level2-color: #1e293b;
+      --level2-border: #94a3b8;
+      --summary-bg: #fef3c7;
+      --summary-color: #92400e;
+      --summary-border: #f59e0b;
+      --free-root-bg: #047857;
+      --free-root-color: #ffffff;
+      --label-bg: #f1f5f9;      /* 标签经典浅灰底色 */
+      --label-color: #475569;   /* 标签深灰文字 */
+      --label-border: #cbd5e1;  /* 标签微边框 */
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    [data-theme="classic"] {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --link-stroke: #93c5fd;
+      --level1-bg: #2563eb;
+      --level1-border: #1d4ed8;
+      --level1-color: #ffffff;
+      --free-root-bg: #1d4ed8;
+      --label-bg: #e2e8f0;
+      --label-color: #334155;
+      --label-border: #cbd5e1;
+    }
+    [data-theme="coral"] {
+      --primary: #ea580c;
+      --primary-hover: #c2410c;
+      --link-stroke: #fdba74;
+      --level1-bg: #ea580c;
+      --level1-border: #c2410c;
+      --level1-color: #ffffff;
+      --free-root-bg: #c2410c;
+      --label-bg: #ffedd5;
+      --label-color: #9a3412;
+      --label-border: #fed7aa;
+    }
+    [data-theme="purple"] {
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --link-stroke: #c4b5fd;
+      --level1-bg: #7c3aed;
+      --level1-border: #6d28d9;
+      --level1-color: #ffffff;
+      --free-root-bg: #5b21b6;
+      --label-bg: #ede9fe;
+      --label-color: #5b21b6;
+      --label-border: #ddd6fe;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.95);
+      --border: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --link-stroke: #38bdf8;
+      --root-bg: #38bdf8;
+      --root-color: #0f172a;
+      --level1-bg: #1e293b;
+      --level1-color: #f8fafc;
+      --level1-border: #38bdf8;
+      --level2-bg: #1e293b;
+      --level2-color: #f1f5f9;
+      --level2-border: #475569;
+      --summary-bg: #78350f;
+      --summary-color: #fef3c7;
+      --summary-border: #d97706;
+      --free-root-bg: #0369a1;
+      --free-root-color: #ffffff;
+      --label-bg: #334155;
+      --label-color: #cbd5e1;
+      --label-border: #475569;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", Segoe UI, Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      overflow: hidden; width: 100vw; height: 100vh; user-select: none;
+    }
+    #app-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    /* 顶部导航与主工具栏 */
+    #topbar {
+      position: absolute; top: 12px; left: 16px; right: 16px; height: 48px;
+      background: var(--panel-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; box-shadow: var(--shadow); z-index: 100;
+    }
+    .bar-group { display: flex; align-items: center; gap: 8px; }
+    .logo-area { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .logo-area .icon { font-size: 20px; }
+    .map-title-edit {
+      border: 1px solid transparent; padding: 3px 8px; border-radius: 6px;
+      max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+      cursor: pointer;
+    }
+    .map-title-edit:hover { background: rgba(0,0,0,0.05); border-color: var(--border); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px; height: 32px;
+      padding: 0 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border); background: var(--panel-bg); color: var(--text);
+      cursor: pointer; transition: all 0.15s ease; outline: none; white-space: nowrap;
+    }
+    .btn:hover { background: rgba(0,0,0,0.05); border-color: var(--primary); color: var(--primary); }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.primary:hover { background: var(--primary-hover); }
+    .btn.highlight { background: rgba(16, 185, 129, 0.1); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .btn.highlight:hover { background: var(--primary); color: #fff; }
+    .btn kbd {
+      font-size: 10px; background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px;
+      font-family: monospace; font-weight: normal;
+    }
+    .badge-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--primary); color: #fff; font-size: 11px; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%; margin-left: 2px;
+    }
+    .btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; font-size: 15px; }
+    .divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+    
+    /* 画布与 SVG 容器 */
+    #canvas-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      cursor: grab; overflow: hidden;
+      background-image: radial-gradient(var(--border) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #canvas-container.grabbing { cursor: grabbing !important; }
+    #canvas-container.dragging-node { cursor: move !important; }
+    #mindmap-svg { width: 100%; height: 100%; pointer-events: none; }
+    #viewport-group { pointer-events: auto; }
+    #links-layer { pointer-events: none; }
+    #brackets-layer { pointer-events: none; }
+    .map-link { pointer-events: none; }
+    .summary-bracket { pointer-events: none; }
+    .node-group { pointer-events: auto; }
+
+    /* 直角折线转接线 (Orthogonal Stepped Link) 样式 */
+    .map-link {
+      fill: none;
+      stroke: var(--link-stroke);
+      stroke-width: 2.2px;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+      transition: stroke 0.2s ease;
+      shape-rendering: geometricPrecision;
+    }
+    .summary-bracket {
+      fill: none;
+      stroke: var(--summary-border);
+      stroke-width: 2.4px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* 节点样式与高质感胶囊 */
+    .node-group { cursor: pointer; transition: transform 0.05s ease; }
+    .node-rect {
+      transition: stroke 0.15s ease, filter 0.15s ease, stroke-width 0.15s ease;
+      stroke-width: 1.5px;
+    }
+    .node-text {
+      font-size: 13px; font-weight: 500; text-anchor: middle;
+      dominant-baseline: central; pointer-events: none;
+    }
+    .node-group:hover .node-rect {
+      stroke: var(--primary) !important;
+      stroke-width: 2px;
+      filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.25));
+    }
+    .node-group.selected .node-rect {
+      stroke: var(--primary) !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.45));
+    }
+    .node-group.multi-selected .node-rect {
+      stroke: #f59e0b !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5));
+    }
+    .node-group.drag-hover .node-rect {
+      stroke: #3b82f6 !important;
+      stroke-width: 3px !important;
+      stroke-dasharray: 4 2;
+      filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+    }
+    .node-group.is-dragging { opacity: 0.45; }
+
+    /* 标签专属药丸胶囊样式 (截图中带框浅灰标签) */
+    .node-label-group { cursor: pointer; }
+    .node-label-group:hover .node-label-rect {
+      stroke: var(--primary) !important;
+      fill: rgba(16, 185, 129, 0.08) !important;
+    }
+    .node-label-rect {
+      fill: var(--label-bg);
+      stroke: var(--label-border);
+      stroke-width: 1px;
+      transition: all 0.15s ease;
+    }
+    .node-label-text {
+      font-size: 11px;
+      font-weight: 500;
+      fill: var(--label-color);
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    .collapse-btn {
+      fill: var(--panel-bg); stroke: var(--border); stroke-width: 1.5px; cursor: pointer;
+    }
+    .collapse-btn:hover { fill: var(--primary); stroke: var(--primary); }
+    .collapse-text { font-size: 10px; font-weight: bold; fill: var(--text-muted); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .node-group:hover .collapse-btn:hover + .collapse-text { fill: #ffffff; }
+    .note-badge {
+      font-size: 11px; fill: #f59e0b; cursor: pointer; font-weight: bold;
+      text-anchor: middle; dominant-baseline: central;
+    }
+
+    /* 拖拽指示条与拖影 */
+    #drag-tip-bar {
+      position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9); color: #ffffff;
+      padding: 8px 18px; border-radius: 20px; font-size: 13px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3); z-index: 250;
+      display: none; pointer-events: none; animation: fadeIn 0.15s ease;
+    }
+    #drag-ghost {
+      position: absolute; pointer-events: none; z-index: 240;
+      background: var(--panel-bg); border: 2px dashed var(--primary);
+      border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 右下角控制底栏 */
+    #bottom-bar {
+      position: absolute; bottom: 16px; right: 16px;
+      display: flex; align-items: center; gap: 8px; z-index: 100;
+    }
+    .control-panel {
+      background: var(--panel-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 8px; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 6px; font-size: 12px;
+    }
+    #status-indicator { position: absolute; bottom: 16px; left: 16px; z-index: 100; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;
+    }
+    .status-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    /* 行内编辑框 */
+    #inline-editor {
+      position: absolute; display: none; z-index: 120;
+      background: var(--panel-bg); border: 2px solid var(--primary);
+      border-radius: 6px; padding: 4px 8px; font-family: inherit;
+      font-size: 13px; font-weight: 500; color: var(--text);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2); outline: none;
+    }
+
+    /* 右键菜单 */
+    #custom-context-menu {
+      position: fixed; display: none; z-index: 350;
+      background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+      min-width: 200px; padding: 6px 0; font-size: 13px; backdrop-filter: blur(16px);
+    }
+    .menu-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 14px; cursor: pointer; color: var(--text); transition: background 0.1s;
+    }
+    .menu-item:hover { background: rgba(0, 0, 0, 0.06); color: var(--primary); }
+    .menu-item.danger { color: #ef4444; }
+    .menu-item.danger:hover { background: #fef2f2; }
+    .menu-item.action-blue { color: #2563eb; font-weight: 600; }
+    .menu-item.action-blue:hover { background: #eff6ff; }
+    .menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .menu-item kbd { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+
+    /* 标签编辑模态弹窗 */
+    #label-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 380px; background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+      z-index: 410; padding: 20px; display: none; backdrop-filter: blur(10px);
+    }
+    .label-input {
+      width: 100%; height: 38px; border: 1px solid var(--border); border-radius: 6px;
+      padding: 0 10px; font-size: 13px; outline: none; background: var(--bg); color: var(--text);
+      margin: 12px 0 16px 0;
+    }
+    .label-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+
+    /* 节点笔记弹窗 */
+    #note-modal {
+      position: absolute; width: 340px; background: var(--panel-bg);
+      border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18); z-index: 200; display: none;
+      padding: 14px;
+    }
+    .note-toolbar {
+      display: flex; align-items: center; gap: 6px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border); margin-bottom: 8px;
+    }
+    .note-btn {
+      width: 26px; height: 26px; border: 1px solid var(--border); background: var(--bg);
+      border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .note-btn:hover { background: rgba(0,0,0,0.08); }
+    #note-editor {
+      width: 100%; min-height: 120px; max-height: 240px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+      font-size: 13px; line-height: 1.6; outline: none; background: var(--bg);
+      color: var(--text);
+    }
+    /* 侧边导图抽屉与模态框 */
+    #drawer-mask {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3); z-index: 300; display: none;
+      backdrop-filter: blur(2px);
+    }
+    #drawer {
+      position: fixed; top: 0; left: -320px; width: 320px; height: 100%;
+      background: var(--panel-bg); border-right: 1px solid var(--border);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15); z-index: 301;
+      display: flex; flex-direction: column; transition: left 0.25s ease;
+    }
+    #drawer.open { left: 0; }
+    .drawer-header {
+      padding: 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .drawer-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .map-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+      margin-bottom: 8px; cursor: pointer; transition: all 0.15s ease;
+      background: var(--bg);
+    }
+    .map-item:hover { border-color: var(--primary); background: rgba(16, 185, 129, 0.05); }
+    .map-item.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); font-weight: 600; }
+    .map-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .map-action-btn { border: none; background: transparent; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 4px; transition: all 0.15s ease; }
+    .map-action-btn:hover { background: rgba(0,0,0,0.06); }
+    .map-rename-btn { color: var(--text-muted); }
+    .map-rename-btn:hover { color: var(--primary); background: rgba(16, 185, 129, 0.15); }
+    .map-del-btn { color: #ef4444; }
+    .map-del-btn:hover { color: #dc2626; background: rgba(239, 68, 68, 0.15); }
+    /* 导入与帮助 */
+    #import-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 480px; background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+      z-index: 420; padding: 22px; display: none;
+    }
+    .drop-zone {
+      border: 2px dashed var(--primary); border-radius: 8px; padding: 30px;
+      text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.03);
+      margin: 14px 0; transition: background 0.15s ease;
+    }
+    .drop-zone:hover { background: rgba(16, 185, 129, 0.08); }
+    .popover {
+      position: absolute; background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: var(--shadow); padding: 8px; z-index: 150;
+      display: none; flex-direction: column; gap: 4px; min-width: 150px;
+    }
+    .pop-item {
+      padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pop-item:hover { background: rgba(0,0,0,0.05); }
+    .color-swatch { width: 14px; height: 14px; border-radius: 50%; }
+    #help-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 500px; background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 400; padding: 22px; display: none;
+    }
+    .help-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+  
+    /* 保存按钮与未保存状态 */
+    .btn-save {
+      background: var(--primary); color: #ffffff !important; font-weight: 600;
+      border: 1px solid var(--primary); position: relative;
+    }
+    .btn-save:hover {
+      filter: brightness(1.1); transform: translateY(-1px);
+    }
+    .btn-save.has-unsaved {
+      background: #e11d48 !important; border-color: #be123c !important;
+      animation: pulse-border 1.5s infinite;
+    }
+    .btn-save.has-unsaved::after {
+      content: ""; position: absolute; top: -3px; right: -3px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ffedd5; border: 2px solid #e11d48;
+    }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2); }
+    }
+    .status-dot.unsaved { background: #e11d48; }
+    /* 轻量保存提示 Toast */
+    .layout-row { margin-bottom: 10px; }
+    .layout-row label { font-size: 12px; color: var(--text-muted); display:block; margin-bottom:4px; }
+    .layout-row label b { color: var(--primary); font-size: 12px; }
+    #save-toast {
+      position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9); color: #fff;
+      padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 9999;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #save-toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(-5px);
+    }
+</style>
+</head>
+<body data-theme="emerald" oncontextmenu="return false;">
+  <!-- 顶部主工具栏 -->
+  <header id="topbar">
+    <div class="bar-group">
+      <button class="btn btn-icon" id="btn-open-drawer" title="我的导图库">📁</button>
+      <div class="logo-area">
+        <span class="icon">🧠</span>
+        <span class="map-title-edit" id="display-title" title="点击重命名">思维导图</span>
+      </div>
+    </div>
+    <!-- 快捷交互按钮区 -->
+    <div class="bar-group">
+      <button class="btn" id="btn-add-child" title="添加子节点 (Tab)">
+        <span>➕ 子节点</span> <kbd>Tab</kbd>
+      </button>
+      <button class="btn" id="btn-add-sibling" title="添加同节点 (Enter)">
+        <span>➕ 同节点</span> <kbd>Enter</kbd>
+      </button>
+      <!-- 概要按钮 -->
+      <button class="btn highlight" id="btn-add-summary" title="按住 Ctrl 多选，点击生成概要 (Ctrl + ])">
+        <span>📌 概要</span> <kbd>Ctrl + ]</kbd> <span id="multi-badge" class="badge-count" style="display:none;">0</span>
+      </button>
+      <!-- 标签按钮 -->
+      <button class="btn" id="btn-edit-label" title="添加/编辑标签 (Ctrl + L)">
+        <span>🏷️ 标签</span> <kbd>Ctrl + L</kbd>
+      </button>
+      <button class="btn" id="btn-add-note" title="节点笔记">
+        <span>📝 笔记</span>
+      </button>
+      <div class="divider"></div>
+      <button class="btn btn-icon" id="btn-undo" title="撤销 (Ctrl+Z)">↩️</button>
+      <button class="btn btn-icon" id="btn-redo" title="重做 (Ctrl+Y)">↪️</button>
+    </div>
+    <!-- 视图与功能管理区 -->
+    <div class="bar-group">
+      <!-- 显眼保存按键 -->
+      <button class="btn btn-save" id="btn-save-map" title="保存当前思维导图 (快捷键: Ctrl + S)">
+        <span>💾 保存</span> <kbd>Ctrl+S</kbd>
+      </button>
+      <button class="btn" id="btn-layout-settings" title="调整横向/纵向间距与文本换行宽度">
+        <span>📐 布局</span>
+      </button>
+      <button class="btn" id="btn-theme-select" title="选择视觉主题">
+        <span>🎨 主题</span>
+      </button>
+      <button class="btn" id="btn-open-import" title="导入 .xmind/.md 脑图">
+        <span>📥 导入</span>
+      </button>
+      <button class="btn primary" id="btn-export" title="导出高清图片或 JSON">
+        <span>💾 导出</span>
+      </button>
+      <button class="btn btn-icon" id="btn-help" title="快捷键操作帮助">❓</button>
+    </div>
+  </header>
+
+  <!-- 核心交互画布 -->
+  <main id="canvas-container">
+    <svg id="mindmap-svg">
+      <g id="viewport-group">
+        <!-- 转接连线层 -->
+        <g id="links-layer"></g>
+        <!-- 概要大括号层 -->
+        <g id="brackets-layer"></g>
+        <!-- 脑图节点层 -->
+        <g id="nodes-layer"></g>
+      </g>
+    </svg>
+    <!-- 节点文本快速原地编辑框 -->
+    <input type="text" id="inline-editor">
+    <!-- 拖拽操作悬浮提示与幽灵节点 -->
+    <div id="drag-tip-bar"></div>
+    <div id="drag-ghost"></div>
+  </main>
+
+  <!-- 同步状态指示与画布缩放底栏 -->
+  <footer id="status-indicator">
+    <div class="control-panel">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text" style="color:var(--text-muted);">已就绪</span>
+    </div>
+  </footer>
+
+  <footer id="bottom-bar">
+    <div class="control-panel">
+      <button class="btn btn-icon" id="btn-zoom-out" title="缩小">-</button>
+      <span id="zoom-text" style="width:42px;text-align:center;font-weight:600;">100%</span>
+      <button class="btn btn-icon" id="btn-zoom-in" title="放大">+</button>
+      <button class="btn btn-icon" id="btn-reset-view" title="画布居中">🎯</button>
+    </div>
+  </footer>
+
+  <!-- 右键上下文菜单 (节点与空白画布自适应) -->
+  <div id="custom-context-menu">
+    <div id="menu-node-actions">
+      <div class="menu-item" id="ctx-add-child"><span>➕ 添加子节点</span><kbd>Tab</kbd></div>
+      <div class="menu-item" id="ctx-add-sibling"><span>➕ 添加同节点</span><kbd>Enter</kbd></div>
+      <div class="menu-item" id="ctx-add-summary"><span>📌 概要</span><kbd>Ctrl+]</kbd></div>
+      <div class="menu-item" id="ctx-edit-label"><span>🏷️ 标签</span><kbd>Ctrl+L</kbd></div>
+      <div class="menu-item" id="ctx-edit-note"><span>📝 笔记</span></div>
+      <div class="menu-divider"></div>
+      <!-- 节点移动与脱离主节点核心菜单项 -->
+      <div class="menu-item action-blue" id="ctx-detach-node"><span>🚀 脱离为主节点</span><kbd>Ctrl+Shift+D</kbd></div>
+      <div class="menu-item action-blue" id="ctx-move-mode"><span>🔀 移动至新节点</span></div>
+      <div class="menu-divider"></div>
+      <div class="menu-item" id="ctx-toggle-collapse"><span>📂 折叠/展开分支</span></div>
+      <div class="menu-item" id="ctx-edit-text"><span>✏️ 编辑节点文本</span><kbd>Space</kbd></div>
+      <div class="menu-item danger" id="ctx-delete-node"><span>🗑️ 删除选中节点</span><kbd>Del</kbd></div>
+    </div>
+    <div id="menu-canvas-actions">
+      <div class="menu-item" id="ctx-add-free"><span>💡 新建节点</span></div>
+      <div class="menu-item" id="ctx-reset-view"><span>🎯 画布居中</span></div>
+      <div class="menu-item" id="ctx-import-map"><span>📥 导入导图</span></div>
+      <div class="menu-item" id="ctx-export-png"><span>🖼️ 导出图片</span></div>
+    </div>
+  </div>
+
+  <!-- 节点标签编辑模态框 -->
+  <div id="label-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:15px;font-weight:700;">🏷️ 标签</h3>
+      <button class="btn btn-icon" id="btn-close-label" style="border:none;">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+      标签绑定在节点下方，支持多个逗号隔开。
+    </p>
+    <input type="text" class="label-input" id="label-modal-input" placeholder="输入标签文字，留空则清除标签...">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <button class="btn" id="btn-clear-label" style="color:#ef4444;">清空标签</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" id="btn-cancel-label">取消</button>
+        <button class="btn primary" id="btn-save-label">确定保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 节点笔记弹窗 -->
+  <div id="note-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px;">
+        <span>📝</span> <span id="note-target-name">笔记</span>
+      </span>
+      <button class="btn btn-icon" id="btn-close-note" style="border:none;width:20px;height:20px;">✕</button>
+    </div>
+    <div class="note-toolbar">
+      <button class="note-btn" onclick="document.execCommand('bold',false,null)" title="加粗">B</button>
+      <button class="note-btn" onclick="document.execCommand('italic',false,null)" title="斜体"><i>I</i></button>
+      <button class="note-btn" onclick="document.execCommand('underline',false,null)" title="下划线"><u>U</u></button>
+      <button class="note-btn" onclick="addNoteLink()" title="添加超链接">🔗</button>
+      <button class="note-btn" onclick="document.execCommand('insertUnorderedList',false,null)" title="无序列表">•</button>
+    </div>
+    <div id="note-editor" contenteditable="true" placeholder="输入节点详细笔记说明..."></div>
+    <div style="margin-top:8px;display:flex;justify-content:flex-end;gap:6px;">
+      <button class="btn" id="btn-save-note" style="height:28px;padding:0 10px;background:var(--primary);color:#fff;border-color:var(--primary);">保存笔记</button>
+    </div>
+  </div>
+
+  <!-- 主题选择弹出层 -->
+  <div class="popover" id="theme-popover" style="top: 68px; right: 220px;">
+    <div class="pop-item" data-theme="emerald"><span class="color-swatch" style="background:#10b981;"></span>哲学思辨·深墨绿</div>
+    <div class="pop-item" data-theme="classic"><span class="color-swatch" style="background:#2563eb;"></span>经典商务·深海蓝</div>
+    <div class="pop-item" data-theme="coral"><span class="color-swatch" style="background:#ea580c;"></span>珊瑚创意·暖阳橙</div>
+    <div class="pop-item" data-theme="purple"><span class="color-swatch" style="background:#7c3aed;"></span>典雅高贵·紫罗兰</div>
+    <div class="pop-item" data-theme="dark"><span class="color-swatch" style="background:#0f172a;border:1px solid #38bdf8;"></span>极客沉浸·暗黑风</div>
+  </div>
+  <!-- 布局设置弹出层 -->
+  <div class="popover" id="layout-popover" style="top:68px; right:300px; width:280px; padding:14px 16px;">
+    <div style="font-weight:700;font-size:13px;margin-bottom:10px;">📐 布局设置</div>
+    <div class="layout-row">
+      <label>横向间距 <b id="val-hgap">65</b> px</label>
+      <input type="range" id="rng-hgap" min="20" max="200" step="5" value="65" style="width:100%;">
+    </div>
+    <div class="layout-row">
+      <label>纵向间距 <b id="val-vgap">52</b> px</label>
+      <input type="range" id="rng-vgap" min="16" max="200" step="4" value="52" style="width:100%;">
+    </div>
+    <div class="layout-row">
+      <label>根节点横向间距 <b id="val-rootgap">85</b> px</label>
+      <input type="range" id="rng-rootgap" min="30" max="240" step="5" value="85" style="width:100%;">
+    </div>
+    <div class="layout-row">
+      <label>文本换行宽度 <b id="val-wrap">220</b> px</label>
+      <input type="range" id="rng-wrap" min="90" max="420" step="10" value="220" style="width:100%;">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn" id="btn-layout-reset" style="flex:1;height:30px;justify-content:center;">恢复默认</button>
+      <button class="btn" id="btn-layout-close" style="flex:1;height:30px;justify-content:center;background:var(--primary);color:#fff;border-color:var(--primary);">完成</button>
+    </div>
+  </div>
+
+  <!-- 导出选项弹出层 -->
+  <div class="popover" id="export-popover" style="top: 68px; right: 60px;">
+    <div class="pop-item" id="export-png">🖼️ 导出高清 PNG 图片</div>
+    <div class="pop-item" id="export-json">💾 导出 JSON 工程文件</div>
+  </div>
+
+  <!-- 导入模态框 -->
+  <div id="import-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:16px;font-weight:700;">📥 导入思维导图</h3>
+      <button class="btn btn-icon" id="btn-close-import" style="border:none;">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+      支持 <b>.xmind</b>、<b>.md</b>、<b>.mm</b>、<b>.km</b>、<b>.opml</b>、<b>.json</b>
+    </p>
+    <div class="drop-zone" id="drop-zone">
+      <div style="font-size:32px;margin-bottom:8px;">📂</div>
+      <div style="font-weight:600;font-size:14px;color:var(--primary);">点击选择文件 或 将文件拖放到此处</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">系统将自动识别并无损转换为思维导图</div>
+      <input type="file" id="universal-file-input" accept=".xmind,.md,.markdown,.mm,.km,.opml,.json,.txt" style="display:none;">
+    </div>
+    <div style="text-align:right;">
+      <button class="btn" id="btn-cancel-import">取消</button>
+    </div>
+  </div>
+
+  <!-- 快捷键与操作指南模态框 -->
+  <div id="help-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="font-size:16px;font-weight:700;">⌨️ 快捷键与操作</h3>
+      <button class="btn btn-icon" id="btn-close-help" style="border:none;">✕</button>
+    </div>
+    <div class="help-row"><span>添加子节点</span><kbd>Tab</kbd></div>
+    <div class="help-row"><span>添加同节点</span><kbd>Enter</kbd></div>
+    <div class="help-row"><span>添加概要</span><kbd>Ctrl + ] 或 点击概要</kbd></div>
+    <div class="help-row"><span>编辑节点</span><kbd>Space / 双击</kbd></div>
+    <div class="help-row"><span>节点标签</span><kbd>Ctrl + L 或双击标签</kbd></div>
+    <div class="help-row"><span>删除选中</span><kbd>Delete / Backspace</kbd></div>
+    <div class="help-row"><span>撤销/重做</span><kbd>Ctrl + Z / Ctrl + Y</kbd></div>
+    <div class="help-row"><span>按住 Ctrl 多选</span><kbd>Ctrl + 鼠标单击</kbd></div>
+    <div class="help-row"><span>平移画布</span><span>按住空白处拖拽</span></div>
+    <div class="help-row"><span>一键脱离为主节点</span><kbd>Ctrl + Shift + D</kbd></div>
+    <div class="help-row"><span>拖拽节点移动到新分支</span><span>按住节点拖动到目标节点松手</span></div>
+    <div class="help-row"><span>拖拽节点脱离为主节点</span><span>按住节点拖到画布空白处松手</span></div>
+  </div>
+
+  <!-- 侧边导图文件管理抽屉 -->
+  <div id="drawer-mask"></div>
+  <aside id="drawer">
+    <div class="drawer-header">
+      <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px;">
+        <span>📁</span> 我的导图文档库
+      </div>
+      <button class="btn btn-icon" id="btn-close-drawer" style="border:none;">✕</button>
+    </div>
+    <div style="padding:12px;border-bottom:1px solid var(--border);">
+      <button class="btn primary" id="btn-create-map" style="width:100%;justify-content:center;">
+        ➕ 新建空白思维导图
+      </button>
+    </div>
+    <div class="drawer-list" id="map-list-container"></div>
+  </aside>
+
+  <!-- 核心逻辑脚本 -->
+  <script>
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+    /* =========================================================================
+     * 1. 全局状态机
+     * ========================================================================= */
+    const state = {
+      currentMap: null,
+      currentMapId: null,
+      selectedNodeId: null,
+      selectedNodeIds: new Set(), // Ctrl 多选节点集合
+      zoom: 1.0,
+      panX: 0,
+      panY: 0,
+      viewStates: {}, // 每个文档独立记忆视图位置 { mapId: {panX, panY, zoom} }
+      isPanning: false,
+      panStartX: 0,
+      panStartY: 0,
+      theme: "emerald",
+      layout: "right", // 阶梯直角转接线逻辑图
+      saveTimer: null,
+      undoStack: [],
+      redoStack: [],
+      editingNoteNode: null,
+      editingLabelNode: null, // 当前正在编辑标签的节点
+      drag: {
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        node: null,
+        targetNode: null,
+        isPickMoveTarget: false
+      }
+    };
+
+    // 布局间距（可在「布局」面板中调节，并随文档保存）
+    const LAYOUT_DEFAULTS = { hGap: 65, vGap: 52, rootHGap: 85, wrapWidth: 220 };
+    let HORIZONTAL_GAP = LAYOUT_DEFAULTS.hGap;
+    let VERTICAL_GAP = LAYOUT_DEFAULTS.vGap;
+    let ROOT_H_GAP = LAYOUT_DEFAULTS.rootHGap;
+    let MAX_NODE_TEXT_WIDTH = LAYOUT_DEFAULTS.wrapWidth; // 节点文本最大宽度，超出自动换行
+    function applyLayoutSettings(cfg) {
+      const c = Object.assign({}, LAYOUT_DEFAULTS, cfg || {});
+      HORIZONTAL_GAP = c.hGap;
+      VERTICAL_GAP = c.vGap;
+      ROOT_H_GAP = c.rootHGap;
+      MAX_NODE_TEXT_WIDTH = c.wrapWidth;
+    }
+
+    const svg = document.getElementById("mindmap-svg");
+    const viewportGroup = document.getElementById("viewport-group");
+    const linksLayer = document.getElementById("links-layer");
+    const bracketsLayer = document.getElementById("brackets-layer");
+    const nodesLayer = document.getElementById("nodes-layer");
+    const canvasContainer = document.getElementById("canvas-container");
+    const inlineEditor = document.getElementById("inline-editor");
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const zoomText = document.getElementById("zoom-text");
+    const displayTitle = document.getElementById("display-title");
+    const contextMenu = document.getElementById("custom-context-menu");
+    const noteModal = document.getElementById("note-modal");
+    const noteEditor = document.getElementById("note-editor");
+    const labelModal = document.getElementById("label-modal");
+    const labelModalInput = document.getElementById("label-modal-input");
+    const importModal = document.getElementById("import-modal");
+    const multiBadge = document.getElementById("multi-badge");
+    const dragTipBar = document.getElementById("drag-tip-bar");
+    const dragGhost = document.getElementById("drag-ghost");
+
+    /* =========================================================================
+     * 2. 数据与 API 交互 (支持 NAS 共享存储)
+     * ========================================================================= */
+    const API_BASE = window.location.pathname.startsWith("/app/mindmap") ? "/app/mindmap" : "";
+
+    async function fetchApi(path, options = {}) {
+      try {
+        const resp = await fetch(API_BASE + path, options);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        return await resp.json();
+      } catch (err) {
+        console.error("API error:", err);
+        return null;
+      }
+    }
+
+    async function loadCurrentMap(mapId = null) {
+      // 切换前先记住当前文档的视图位置
+      if (state.currentMapId) saveViewState(state.currentMapId);
+      setSyncStatus("syncing", "正在从 fnOS 加载导图...");
+      const url = mapId ? `/api/map?id=${encodeURIComponent(mapId)}` : "/api/map";
+      const data = await fetchApi(url);
+      if (data && data.root) {
+        if (!Array.isArray(data.freeRoots)) data.freeRoots = [];
+        state.currentMap = data;
+        state.currentMapId = data.id;
+        state.theme = data.theme || "emerald";
+        state.layout = data.layout || "right";
+        // 应用该文档保存的布局间距配置
+        applyLayoutSettings(data.layoutConfig);
+        syncLayoutPanel(data.layoutConfig);
+        document.body.setAttribute("data-theme", state.theme);
+        displayTitle.textContent = data.title || "未命名导图";
+        state.selectedNodeId = data.root.id;
+        state.selectedNodeIds.clear();
+        updateMultiSelectUI();
+        state.undoStack = [];
+        state.redoStack = [];
+        renderMindMap();
+        // 恢复该文档专属的视图位置；若存在远离视野的自由节点，则自动适应全部内容
+        const restored = restoreViewState(data.id);
+        const hasFarFree = (data.freeRoots || []).some(fr => {
+          if (typeof fr._customX !== "number" || typeof fr._customY !== "number") return false;
+          const sx = state.panX + fr._customX * state.zoom;
+          const sy = state.panY + fr._customY * state.zoom;
+          const cw = canvasContainer.clientWidth || 1200;
+          const ch = canvasContainer.clientHeight || 800;
+          return sx < -200 || sy < -200 || sx > cw + 200 || sy > ch + 200;
+        });
+        if (hasFarFree) {
+          setTimeout(fitToContent, 60);
+        }
+        setSyncStatus("saved", "已同步至 NAS 共享存储 (直角转接线与标签模式)");
+      } else {
+        setSyncStatus("error", "连接服务器异常");
+      }
+    }
+
+    // 未保存离开保护：切换文档时询问“保存并切换 / 放弃修改直接切换”
+    async function confirmLeaveUnsaved() {
+      if (!state.hasUnsavedChanges) return true;
+      const keep = confirm("当前思维导图未保存。\n\n【确定】-保存文档\n【取消】-放弃保存");
+      if (keep) {
+        await saveCurrentMap();
+        return true;
+      }
+      // 取消：放弃修改，不保存
+      state.hasUnsavedChanges = false;
+      const sb = document.getElementById("btn-save-map");
+      if (sb) sb.classList.remove("has-unsaved");
+      return true;
+    }
+    // 关闭/刷新页面拦截提示
+    window.addEventListener("beforeunload", (e) => {
+      if (state.hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "当前思维导图未保存，确定要离开吗？";
+        return e.returnValue;
+      }
+    });
+    // 标记有未保存修改（去除自动保存，提醒用户点击保存按钮）
+    function markUnsaved() {
+      state.hasUnsavedChanges = true;
+      const saveBtn = document.getElementById("btn-save-map");
+      if (saveBtn) saveBtn.classList.add("has-unsaved");
+      setSyncStatus("unsaved", "● 未保存 (点击「保存」或 Ctrl+S)");
+    }
+    // 兼容原调用的 scheduleAutoSave 改为 markUnsaved
+    function scheduleAutoSave() {
+      markUnsaved();
+    }
+    // 轻量 Toast 提示
+    let toastTimer = null;
+    function showToast(msg, icon = "💾") {
+      const toast = document.getElementById("save-toast");
+      const text = document.getElementById("save-toast-msg");
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1800);
+    }
+    // 主动保存导图数据
+    async function saveCurrentMap(manual = false) {
+      if (!state.currentMap) return;
+      const saveBtn = document.getElementById("btn-save-map");
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span>⏳ 正在保存...</span>`;
+      }
+      setSyncStatus("syncing", "正在保存思维导图到 NAS...");
+      
+      try {
+        state.currentMap.theme = state.theme;
+        state.currentMap.layout = state.layout;
+        const res = await fetchApi("/api/map", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state.currentMap)
+        });
+        
+        if (res && res.ok) {
+          state.hasUnsavedChanges = false;
+          if (saveBtn) {
+            saveBtn.classList.remove("has-unsaved");
+            saveBtn.innerHTML = `<span>✅ 已保存</span> <kbd>Ctrl+S</kbd>`;
+            setTimeout(() => {
+              if (saveBtn) saveBtn.innerHTML = `<span>💾 保存</span> <kbd>Ctrl+S</kbd>`;
+            }, 1200);
+          }
+          const timeStr = new Date().toLocaleTimeString();
+          setSyncStatus("saved", "已成功保存到 NAS (" + timeStr + ")");
+          showToast(`「${state.currentMap.title || "思维导图"}」保存成功！`);
+          // 更新文档库缓存中对应项的 updatedAt 与 title
+          if (window._cachedDocMaps) {
+            const cur = window._cachedDocMaps.find(m => m.id === state.currentMapId);
+            if (cur) {
+              cur.title = state.currentMap.title;
+              cur.updatedAt = new Date().toISOString();
+            }
+          }
+        } else {
+          setSyncStatus("error", "保存失败: " + ((res && res.error) || "未知错误"));
+          alert("保存失败: " + ((res && res.error) || "请检查网络连接"));
+          if (saveBtn) saveBtn.innerHTML = `<span>💾 保存</span> <kbd>Ctrl+S</kbd>`;
+        }
+      } catch (err) {
+        setSyncStatus("error", "保存网络异常: " + err.message);
+        alert("保存网络异常: " + err.message);
+        if (saveBtn) saveBtn.innerHTML = `<span>💾 保存</span> <kbd>Ctrl+S</kbd>`;
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    }
+
+    function setSyncStatus(type, text) {
+      statusDot.className = "status-dot" + (type === "syncing" ? " syncing" : "");
+      statusDot.style.background = type === "error" ? "#ef4444" : (type === "syncing" ? "#f59e0b" : "#10b981");
+      statusText.textContent = text;
+    }
+
+    function recordHistory() {
+      if (!state.currentMap) return;
+      state.undoStack.push(JSON.stringify(state.currentMap));
+      if (state.undoStack.length > 30) state.undoStack.shift();
+      state.redoStack = [];
+    }
+
+    function undo() {
+      if (state.undoStack.length === 0) return;
+      state.redoStack.push(JSON.stringify(state.currentMap));
+      state.currentMap = JSON.parse(state.undoStack.pop());
+      if (!Array.isArray(state.currentMap.freeRoots)) state.currentMap.freeRoots = [];
+      renderMindMap();
+      scheduleAutoSave();
+    }
+
+    function redo() {
+      if (state.redoStack.length === 0) return;
+      state.undoStack.push(JSON.stringify(state.currentMap));
+      state.currentMap = JSON.parse(state.redoStack.pop());
+      if (!Array.isArray(state.currentMap.freeRoots)) state.currentMap.freeRoots = [];
+      renderMindMap();
+      scheduleAutoSave();
+    }
+
+    /* =========================================================================
+     * 3. 布局与坐标测量算法 (兼容标签 尺寸)
+     * ========================================================================= */
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+
+    function getNodeLabels(node) {
+      if (!node) return [];
+      if (Array.isArray(node.labels)) return node.labels.filter(Boolean);
+      if (typeof node.label === "string" && node.label.trim()) return [node.label.trim()];
+      return [];
+    }
+
+    /* ---------- 节点文本自动换行 ---------- */
+    // 按最大宽度把文本折成多行（中英文混排，逐字符累加宽度，遇空格/标点优先断行）
+    function wrapTextLines(text, fontSize, fontWeight, maxWidth) {
+      const raw = String(text === undefined || text === null ? "" : text);
+      if (!raw) return ["未命名"];
+      measureCtx.font = `${fontWeight} ${fontSize}px sans-serif`;
+      const lines = [];
+      const NO_LINE_START = "，。！？；：、）》」』】,.;:!?)]}%";
+      raw.split("\n").forEach(paragraph => {
+        if (paragraph === "") { lines.push(""); return; }
+        let cur = "";
+        for (let i = 0; i < paragraph.length; i++) {
+          const ch = paragraph[i];
+          const test = cur + ch;
+          if (measureCtx.measureText(test).width <= maxWidth || cur === "") {
+            cur = test;
+          } else {
+            // 避免标点出现在行首：把上一行最后一个字挪下来
+            if (NO_LINE_START.indexOf(ch) >= 0 && cur.length > 1) {
+              const moved = cur.slice(-1);
+              lines.push(cur.slice(0, -1));
+              cur = moved + ch;
+            } else {
+              lines.push(cur);
+              cur = ch;
+            }
+          }
+        }
+        if (cur !== "") lines.push(cur);
+      });
+      return lines.length ? lines : ["未命名"];
+    }
+    function measureNode(text, level, hasNote, isSummary = false, isFreeRoot = false, labels = []) {
+      const fontSize = (level === 0 || isFreeRoot) ? 17 : (level === 1 ? 14 : 13);
+      const fontWeight = (level === 0 || isFreeRoot) ? "bold" : (level === 1 ? "600" : "500");
+      const padX = ((level === 0 || isFreeRoot) ? 36 : (level === 1 ? 28 : (isSummary ? 24 : 20))) + (hasNote ? 18 : 0);
+      const padY = (level === 0 || isFreeRoot) ? 22 : (level === 1 ? 14 : 10);
+      // 自动换行：按最大宽度折行，宽度取实际最长行
+      const maxTextW = Math.max(60, MAX_NODE_TEXT_WIDTH - padX);
+      const lines = wrapTextLines(text, fontSize, fontWeight, maxTextW);
+      let longestW = 0;
+      measureCtx.font = `${fontWeight} ${fontSize}px sans-serif`;
+      lines.forEach(l => { longestW = Math.max(longestW, measureCtx.measureText(l).width); });
+      const lineHeight = Math.ceil(fontSize * 1.45);
+      let baseWidth = Math.max(isSummary ? 80 : 64, Math.ceil(longestW) + padX);
+      const baseHeight = lineHeight * lines.length + padY;
+
+      // 测算绑定的标签(Labels) 尺寸
+      let labelExtraH = 0;
+      let totalLabelW = 0;
+      if (labels && labels.length > 0) {
+        measureCtx.font = "500 11px sans-serif";
+        labels.forEach((lb, idx) => {
+          const lm = measureCtx.measureText(String(lb));
+          totalLabelW += Math.ceil(lm.width) + 14; // 每个标签的左右内边距
+          if (idx > 0) totalLabelW += 6; // 标签间距
+        });
+        labelExtraH = 20; // 标签高度 16 + 间隙 4
+        baseWidth = Math.max(baseWidth, totalLabelW + 10);
+      }
+
+      const totalHeight = baseHeight + labelExtraH;
+      return { width: baseWidth, height: totalHeight, baseHeight, labelExtraH, totalLabelW, lines, lineHeight, fontSize, fontWeight };
+    }
+
+    function layoutSubtree(node, direction, level, isSummary = false) {
+      const labels = getNodeLabels(node);
+      const size = measureNode(node.text, level, Boolean(node.note), isSummary, node._isFreeRoot, labels);
+      node._w = size.width;
+      node._h = size.height;
+      node._baseH = size.baseHeight;
+      node._labelExtraH = size.labelExtraH;
+      node._lines = size.lines || [node.text || ""];
+      node._lineHeight = size.lineHeight || 18;
+      node._dir = direction;
+      node._level = level;
+      node._isSummary = isSummary;
+
+      if (!node.children || node.children.length === 0 || node._collapsed) {
+        node._treeHeight = node._h;
+        return;
+      }
+      let totalChildrenH = 0;
+      node.children.forEach((child, i) => {
+        layoutSubtree(child, direction, level + 1, false);
+        totalChildrenH += child._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+      });
+      node._treeHeight = Math.max(node._h, totalChildrenH);
+    }
+
+    function positionSubtree(node, startX, centerY, direction, level) {
+      node._x = startX;
+      node._y = centerY;
+      if (!node.children || node.children.length === 0 || node._collapsed) return;
+      const gap = level === 0 ? ROOT_H_GAP : HORIZONTAL_GAP;
+
+      // 单子节点时：子节点中心 Y 严格等于父节点中心 Y，绝对共轴平齐，连线 100% 为水平直线！
+      if (node.children.length === 1) {
+        const child = node.children[0];
+        const childX = direction === "right" 
+          ? startX + node._w / 2 + gap + child._w / 2
+          : startX - node._w / 2 - gap - child._w / 2;
+        positionSubtree(child, childX, centerY, direction, level + 1);
+        return;
+      }
+
+      let totalChildrenH = 0;
+      node.children.forEach((child, i) => {
+        totalChildrenH += child._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+      });
+      let curY = centerY - totalChildrenH / 2;
+      node.children.forEach(child => {
+        const childCenterY = curY + child._treeHeight / 2;
+        const childX = direction === "right" 
+          ? startX + node._w / 2 + gap + child._w / 2
+          : startX - node._w / 2 - gap - child._w / 2;
+        positionSubtree(child, childX, childCenterY, direction, level + 1);
+        curY += child._treeHeight + VERTICAL_GAP;
+      });
+    }
+
+    function getFullSubtreeBounds(node) {
+      if (!node) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+      let minX = (node._x !== undefined ? node._x : 0) - (node._w || 0) / 2;
+      let maxX = (node._x !== undefined ? node._x : 0) + (node._w || 0) / 2;
+      let minY = (node._y !== undefined ? node._y : 0) - (node._h || 0) / 2;
+      let maxY = (node._y !== undefined ? node._y : 0) + (node._h || 0) / 2;
+      if (node.children && !node._collapsed) {
+        node.children.forEach(c => {
+          const b = getFullSubtreeBounds(c);
+          minX = Math.min(minX, b.minX);
+          maxX = Math.max(maxX, b.maxX);
+          minY = Math.min(minY, b.minY);
+          maxY = Math.max(maxY, b.maxY);
+        });
+      }
+      if (node.summaries) {
+        node.summaries.forEach(s => {
+          if (s.topic && s.topic._x !== undefined) {
+            const sb = getFullSubtreeBounds(s.topic);
+            minX = Math.min(minX, sb.minX);
+            maxX = Math.max(maxX, sb.maxX);
+            minY = Math.min(minY, sb.minY);
+            maxY = Math.max(maxY, sb.maxY);
+          }
+        });
+      }
+      return { minX, maxX, minY, maxY };
+    }
+
+    function getSubtreeBounds(node) {
+      return getFullSubtreeBounds(node);
+    }
+
+    /**
+     * 寻找一个分支或节点的末端代表（若该分支自身已生成向右概要框，则外层总体概要紧随该分支的最右端概要框）
+     */
+    function getSummaryRepresentativeNode(target) {
+      if (!target) return null;
+      if (target.summaries && target.summaries.length > 0) {
+        const lastSum = target.summaries[target.summaries.length - 1];
+        if (lastSum.topic && lastSum.topic._x !== undefined) {
+          return getSummaryRepresentativeNode(lastSum.topic);
+        }
+      }
+      return target;
+    }
+
+    /**
+     * 获取分支及其所有展开后代的最右侧边界（确保概要大括号永远在所有子孙的“最后面”，绝不插在中间列）
+     */
+    function getBranchDeepestRight(node) {
+      if (!node) return -Infinity;
+      let rx = (node._x !== undefined ? node._x : 0) + (node._w || 0) / 2;
+      if (node.children && !node._collapsed) {
+        node.children.forEach(c => {
+          rx = Math.max(rx, getBranchDeepestRight(c));
+        });
+      }
+      if (node.summaries && !node._collapsed) {
+        node.summaries.forEach(s => {
+          if (s.topic && s.topic._x !== undefined) {
+            rx = Math.max(rx, getBranchDeepestRight(s.topic));
+          }
+        });
+      }
+      return rx;
+    }
+
+    /**
+     * 收集一个分支在最右侧的所有末梢叶子节点（用于与最后面的大括号无缝咬合连线）
+     */
+    function collectBranchLeaves(node, result = []) {
+      if (!node) return result;
+      if (!node.children || node.children.length === 0 || node._collapsed) {
+        result.push(node);
+      } else {
+        node.children.forEach(c => collectBranchLeaves(c, result));
+      }
+      if (node.summaries && !node._collapsed) {
+        node.summaries.forEach(s => {
+          if (s.topic) collectBranchLeaves(s.topic, result);
+        });
+      }
+      return result;
+    }
+
+    /**
+     * 严谨精准的概要布局引擎：自底向上后序遍历
+     * 确保概要永远位于被概要分支所有深层子孙的最右侧（在后面），绝不插在树形中间
+     */
+    function layoutSummaries(node) {
+      if (!node) return;
+      // 1. 自底向上：先计算深层子节点的所有概要，确保分支概要的真实坐标已精准就绪
+      if (node.children && !node._collapsed) {
+        node.children.forEach(c => layoutSummaries(c));
+      }
+      // 2. 然后计算当前层级的 summaries (总体概要或本级概要)
+      if (node.summaries && node.summaries.length > 0 && !node._collapsed) {
+        node.summaries.forEach(s => {
+          let targets = [];
+          if (s.targetNodeIds && s.targetNodeIds.length > 0) {
+            targets = s.targetNodeIds.map(tid => findNodeInEntireMap(tid)).filter(Boolean);
+          } else if (node.children && node.children.length > 0) {
+            let [startIdx, endIdx] = s.range || [0, 0];
+            startIdx = Math.max(0, Math.min(startIdx, node.children.length - 1));
+            endIdx = Math.max(startIdx, Math.min(endIdx, node.children.length - 1));
+            for (let i = startIdx; i <= endIdx; i++) {
+              targets.push(node.children[i]);
+            }
+          }
+          if (targets.length === 0) return;
+
+          // 正确逻辑：计算所有目标分支及其所有展开后代的最右边界
+          let targetMaxX = -Infinity;
+          targets.forEach(t => {
+            targetMaxX = Math.max(targetMaxX, getBranchDeepestRight(t));
+          });
+          if (targetMaxX === -Infinity) targetMaxX = (node._x || 0) + (node._w || 0) / 2 + 50;
+
+          // 收集目标分支的所有末梢叶子节点作为连线代表
+          const leafNodes = [];
+          targets.forEach(t => collectBranchLeaves(t, leafNodes));
+          if (leafNodes.length === 0) targets.forEach(t => leafNodes.push(t));
+
+          let targetMinY = Infinity, targetMaxY = -Infinity;
+          leafNodes.forEach(rep => {
+            const repH = rep._baseH || rep._h || 36;
+            const repTop = rep._y - repH / 2;
+            const repBottom = rep._y + repH / 2;
+            targetMinY = Math.min(targetMinY, repTop);
+            targetMaxY = Math.max(targetMaxY, repBottom);
+          });
+
+          const isSingleLeaf = leafNodes.length === 1 && targets.length === 1;
+          const padY = isSingleLeaf ? 2 : 4;
+          s._targetNodes = leafNodes; // 记录末梢叶子节点，与最后面的大括号无缝咬合连线
+          s._bracketStartX = targetMaxX + (isSingleLeaf ? 16 : 24);
+          s._bracketMinY = targetMinY - padY;
+          s._bracketMaxY = targetMaxY + padY;
+          s._bracketMidY = isSingleLeaf ? leafNodes[0]._y : (targetMinY + targetMaxY) / 2;
+
+          const sumTopic = s.topic;
+          layoutSubtree(sumTopic, node._dir || "right", (node._level || 1) + 1, true);
+          const sumX = s._bracketStartX + 20 + sumTopic._w / 2;
+          const sumY = s._bracketMidY;
+          positionSubtree(sumTopic, sumX, sumY, node._dir || "right", (node._level || 1) + 1);
+          layoutSummaries(sumTopic);
+        });
+      }
+    }
+
+    function calculateLayout(root, layoutMode) {
+      if (!root) return;
+      const rootLabels = getNodeLabels(root);
+      const rootSize = measureNode(root.text, 0, Boolean(root.note), false, false, rootLabels);
+      root._w = rootSize.width;
+      root._h = rootSize.height;
+      root._baseH = rootSize.baseHeight;
+      root._labelExtraH = rootSize.labelExtraH;
+      root._lines = rootSize.lines || [root.text || ""];
+      root._lineHeight = rootSize.lineHeight || 22;
+      root._x = root._customX !== undefined ? root._customX : 0;
+      root._y = root._customY !== undefined ? root._customY : 0;
+      root._level = 0;
+
+      if (root.children && root.children.length > 0) {
+        if (layoutMode === "balance") {
+          const rightChildren = [];
+          const leftChildren = [];
+          root.children.forEach((child, idx) => {
+            if (idx % 2 === 0) rightChildren.push(child);
+            else leftChildren.push(child);
+          });
+          if (rightChildren.length > 0) {
+            let totalRightH = 0;
+            rightChildren.forEach((child, i) => {
+              layoutSubtree(child, "right", 1);
+              totalRightH += child._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+            });
+            let curY = root._y - totalRightH / 2;
+            rightChildren.forEach(child => {
+              const centerY = curY + child._treeHeight / 2;
+              const childX = root._x + root._w / 2 + ROOT_H_GAP + child._w / 2;
+              positionSubtree(child, childX, centerY, "right", 1);
+              curY += child._treeHeight + VERTICAL_GAP;
+            });
+          }
+          if (leftChildren.length > 0) {
+            let totalLeftH = 0;
+            leftChildren.forEach((child, i) => {
+              layoutSubtree(child, "left", 1);
+              totalLeftH += child._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+            });
+            let curY = root._y - totalLeftH / 2;
+            leftChildren.forEach(child => {
+              const centerY = curY + child._treeHeight / 2;
+              const childX = root._x - root._w / 2 - ROOT_H_GAP - child._w / 2;
+              positionSubtree(child, childX, centerY, "left", 1);
+              curY += child._treeHeight + VERTICAL_GAP;
+            });
+          }
+        } else {
+          // 向右辐射树状逻辑图 (阶梯直角连线)
+          let totalH = 0;
+          root.children.forEach((child, i) => {
+            layoutSubtree(child, "right", 1);
+            totalH += child._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+          });
+          let curY = root._y - totalH / 2;
+          root.children.forEach(child => {
+            const centerY = curY + child._treeHeight / 2;
+            const childX = root._x + root._w / 2 + ROOT_H_GAP + child._w / 2;
+            positionSubtree(child, childX, centerY, "right", 1);
+            curY += child._treeHeight + VERTICAL_GAP;
+          });
+        }
+      }
+      layoutSummaries(root);
+
+      // 布局所有脱离出的独立主节点 (Free Floating Roots)
+      if (state.currentMap && Array.isArray(state.currentMap.freeRoots)) {
+        state.currentMap.freeRoots.forEach(fRoot => {
+          fRoot._isFreeRoot = true;
+          fRoot._level = 0;
+          const fLabels = getNodeLabels(fRoot);
+          const fSize = measureNode(fRoot.text, 0, Boolean(fRoot.note), false, true, fLabels);
+          fRoot._w = fSize.width;
+          fRoot._h = fSize.height;
+          fRoot._baseH = fSize.baseHeight;
+          fRoot._labelExtraH = fSize.labelExtraH;
+          fRoot._lines = fSize.lines || [fRoot.text || ""];
+          fRoot._lineHeight = fSize.lineHeight || 22;
+          fRoot._x = (typeof fRoot._customX === "number") ? fRoot._customX : (root._x + 200);
+          fRoot._y = (typeof fRoot._customY === "number") ? fRoot._customY : (root._y + 200);
+          if (fRoot.children && fRoot.children.length > 0) {
+            let fTotalH = 0;
+            fRoot.children.forEach((c, i) => {
+              layoutSubtree(c, "right", 1);
+              fTotalH += c._treeHeight + (i > 0 ? VERTICAL_GAP : 0);
+            });
+            let curY = fRoot._y - fTotalH / 2;
+            fRoot.children.forEach(c => {
+              const centerY = curY + c._treeHeight / 2;
+              const childX = fRoot._x + fRoot._w / 2 + ROOT_H_GAP + c._w / 2;
+              positionSubtree(c, childX, centerY, "right", 1);
+              curY += c._treeHeight + VERTICAL_GAP;
+            });
+          }
+          layoutSummaries(fRoot);
+        });
+      }
+    }
+
+    /* =========================================================================
+     * 4. SVG 渲染引擎 (直角阶梯转接线、标签渲染、大括号概要)
+     * ========================================================================= */
+    function renderMindMap() {
+      if (!state.currentMap || !state.currentMap.root) return;
+      calculateLayout(state.currentMap.root, state.layout);
+      linksLayer.innerHTML = "";
+      bracketsLayer.innerHTML = "";
+      nodesLayer.innerHTML = "";
+
+      // 1. 渲染主树
+      renderNodeAndLinks(state.currentMap.root, null);
+      renderAllSummaries(state.currentMap.root);
+
+      // 2. 渲染所有独立主节点 (Free Roots)
+      if (Array.isArray(state.currentMap.freeRoots)) {
+        state.currentMap.freeRoots.forEach(fRoot => {
+          renderNodeAndLinks(fRoot, null);
+          renderAllSummaries(fRoot);
+        });
+      }
+
+      updateViewportTransform();
+    }
+
+    /**
+     * 核心转接线算法：经典的直角阶梯转折线
+     * 从父节点水平引出 -> 垂直骨架延伸 -> 水平连接至子节点主体
+     */
+    function renderSteppedLink(startX, startY, endX, endY, isLevel1 = false, isRight = true) {
+      const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let midX;
+      if (isRight) {
+        midX = startX + Math.max(18, (endX - startX) * 0.45);
+      } else {
+        midX = startX - Math.max(18, (startX - endX) * 0.45);
+      }
+      const d = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
+      pathEl.setAttribute("d", d);
+      pathEl.setAttribute("class", "map-link");
+      if (isLevel1) pathEl.style.strokeWidth = "2.6px";
+      linksLayer.appendChild(pathEl);
+    }
+
+    function renderNodeAndLinks(node, parent) {
+      if (parent) {
+        const isRight = node._dir === "right";
+        // 连线锚点直接连接主体矩形几何中心，不随标签上下偏移
+        const startX = isRight ? parent._x + parent._w / 2 : parent._x - parent._w / 2;
+        const startY = parent._y;
+        const endX = isRight ? node._x - node._w / 2 : node._x + node._w / 2;
+        const endY = node._y;
+        renderSteppedLink(startX, startY, endX, endY, node._level === 1, isRight);
+      }
+
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      let cls = "node-group";
+      if (node.id === state.selectedNodeId) cls += " selected";
+      if (state.selectedNodeIds.has(node.id)) cls += " multi-selected";
+      if (state.drag.node && state.drag.node.id === node.id) cls += " is-dragging";
+      if (state.drag.targetNode && state.drag.targetNode.id === node.id) cls += " drag-hover";
+
+      g.setAttribute("class", cls);
+      g.setAttribute("data-id", node.id);
+      g.setAttribute("transform", `translate(${node._x}, ${node._y})`);
+
+      const baseH = node._baseH || node._h;
+
+      // 主节点背景矩形（严格垂直居中于 (0, 0)，不占用原节点位置）
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", -node._w / 2);
+      rect.setAttribute("y", -baseH / 2);
+      rect.setAttribute("width", node._w);
+      rect.setAttribute("height", baseH);
+      rect.setAttribute("class", "node-rect");
+
+      // 主节点文字（严格垂直居中于 (0, 0)）
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", node.note ? -6 : 0);
+      text.setAttribute("y", 0);
+      text.setAttribute("class", "node-text");
+      // 多行文本：tspan 逐行渲染并整体垂直居中
+      const textLines = (node._lines && node._lines.length) ? node._lines : [node.text || "分支主题"];
+      const lh = node._lineHeight || 18;
+      const startY = -((textLines.length - 1) * lh) / 2;
+      textLines.forEach((line, idx) => {
+        const ts = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        ts.setAttribute("x", node.note ? -6 : 0);
+        ts.setAttribute("y", startY + idx * lh);
+        ts.textContent = line === "" ? " " : line;
+        text.appendChild(ts);
+      });
+
+      // 节点层级样式定制
+      if (node._isSummary) {
+        rect.style.fill = "var(--summary-bg)";
+        rect.style.stroke = "var(--summary-border)";
+        rect.setAttribute("rx", "10px"); rect.setAttribute("ry", "10px");
+        text.style.fill = "var(--summary-color)";
+        text.style.fontSize = "13px";
+        text.style.fontWeight = "600";
+      } else if (node._isFreeRoot) {
+        rect.style.fill = "var(--free-root-bg)";
+        rect.style.stroke = "var(--level1-border)";
+        rect.setAttribute("rx", "16px"); rect.setAttribute("ry", "16px");
+        text.style.fill = "var(--free-root-color)";
+        text.style.fontSize = "15px";
+        text.style.fontWeight = "bold";
+      } else if (node._level === 0) {
+        rect.style.fill = "var(--root-bg)";
+        rect.style.stroke = "none";
+        rect.setAttribute("rx", "16px"); rect.setAttribute("ry", "16px");
+        text.style.fill = "var(--root-color)";
+        text.style.fontSize = "16px";
+        text.style.fontWeight = "bold";
+        const fold = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const fx = node._w / 2 - 12, fy = -node._h / 2;
+        fold.setAttribute("d", `M ${fx} ${fy} L ${node._w / 2} ${fy + 12} L ${fx} ${fy + 12} Z`);
+        fold.style.fill = "rgba(255,255,255,0.25)";
+        g.appendChild(fold);
+      } else if (node._level === 1) {
+        rect.style.fill = "var(--level1-bg)";
+        rect.style.stroke = "var(--level1-border)";
+        rect.setAttribute("rx", "14px"); rect.setAttribute("ry", "14px");
+        text.style.fill = "var(--level1-color)";
+        text.style.fontSize = "14px";
+        text.style.fontWeight = "600";
+      } else {
+        rect.style.fill = "var(--level2-bg)";
+        rect.style.stroke = "var(--level2-border)";
+        rect.setAttribute("rx", "12px"); rect.setAttribute("ry", "12px");
+        text.style.fill = "var(--level2-color)";
+        text.style.fontSize = "13px";
+        text.style.fontWeight = "500";
+      }
+
+      g.appendChild(rect);
+      g.appendChild(text);
+
+      // 渲染强绑定的标签
+      const labels = getNodeLabels(node);
+      if (labels && labels.length > 0) {
+        const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        labelGroup.setAttribute("class", "node-label-group");
+        labelGroup.title = "点击或双击修改标签";
+        labelGroup.onclick = (e) => {
+          e.stopPropagation();
+          openLabelModal(node);
+        };
+        labelGroup.ondblclick = (e) => {
+          e.stopPropagation();
+          openLabelModal(node);
+        };
+
+        // 计算总标签在底部的居中位置：在主矩形下方 4px 紧密下挂，不挤占节点主体位置
+        const labelY = baseH / 2 + 4;
+        const labelH = 16;
+        let currentX = - (node._labelTotalW || 0) / 2;
+        // 如果未预存则即时测算
+        let totalW = 0;
+        const widths = labels.map(lb => {
+          measureCtx.font = "500 11px sans-serif";
+          const w = Math.ceil(measureCtx.measureText(String(lb)).width) + 14;
+          totalW += w;
+          return w;
+        });
+        totalW += (labels.length - 1) * 6;
+        currentX = - totalW / 2;
+
+        labels.forEach((lb, idx) => {
+          const w = widths[idx];
+          const lbRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          lbRect.setAttribute("x", currentX);
+          lbRect.setAttribute("y", labelY);
+          lbRect.setAttribute("width", w);
+          lbRect.setAttribute("height", labelH);
+          lbRect.setAttribute("rx", "4px");
+          lbRect.setAttribute("ry", "4px");
+          lbRect.setAttribute("class", "node-label-rect");
+
+          const lbText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          lbText.setAttribute("x", currentX + w / 2);
+          lbText.setAttribute("y", labelY + labelH / 2);
+          lbText.setAttribute("class", "node-label-text");
+          lbText.textContent = String(lb);
+
+          labelGroup.appendChild(lbRect);
+          labelGroup.appendChild(lbText);
+          currentX += w + 6;
+        });
+        g.appendChild(labelGroup);
+      }
+
+      // 笔记指示徽标 ≡
+      if (node.note) {
+        const noteBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        noteBadge.setAttribute("x", node._w / 2 - 14);
+        noteBadge.setAttribute("y", 0);
+        noteBadge.setAttribute("class", "note-badge");
+        noteBadge.textContent = "≡";
+        noteBadge.title = "点击查看/编辑笔记";
+        noteBadge.onclick = (e) => {
+          e.stopPropagation();
+          openNoteModal(node);
+        };
+        g.appendChild(noteBadge);
+      }
+
+      // 折叠展开按钮
+      if (node.children && node.children.length > 0) {
+        const btnX = node._dir === "left" ? -node._w / 2 - 10 : node._w / 2 + 10;
+        const btnY = 0;
+        const btnG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        btnG.setAttribute("transform", `translate(${btnX}, ${btnY})`);
+        btnG.onclick = (e) => {
+          e.stopPropagation();
+          node._collapsed = !node._collapsed;
+          renderMindMap();
+        };
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", 7.5);
+        circle.setAttribute("class", "collapse-btn");
+        const cText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        cText.setAttribute("class", "collapse-text");
+        cText.textContent = node._collapsed ? "+" : "-";
+        btnG.appendChild(circle);
+        btnG.appendChild(cText);
+        g.appendChild(btnG);
+      }
+
+      // 单击、双击与拖拽交互绑定
+      g.onclick = (e) => {
+        e.stopPropagation();
+        if (state.drag.isPickMoveTarget) {
+          finishPickMoveTarget(node);
+          return;
+        }
+        handleNodeClick(node, e);
+      };
+
+      g.ondblclick = (e) => {
+        e.stopPropagation();
+        startInlineEdit(node);
+      };
+
+      g.onmousedown = (e) => {
+        if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
+          e.stopPropagation(); // 阻止冒泡防止触发画布平移
+          state.drag.isDragging = false;
+          state.drag.node = node;
+          state.drag.startX = e.clientX;
+          state.drag.startY = e.clientY;
+        }
+      };
+
+      g.oncontextmenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!state.selectedNodeIds.has(node.id)) {
+          selectNode(node.id);
+        }
+        showContextMenu(e.clientX, e.clientY, true);
+      };
+
+      nodesLayer.appendChild(g);
+
+      // 递归渲染子节点及连线
+      if (node.children && !node._collapsed) {
+        node.children.forEach(child => renderNodeAndLinks(child, node));
+      }
+    }
+
+    /* =========================================================================
+     * 5. 概要 渲染引擎
+     * ========================================================================= */
+    function renderAllSummaries(node) {
+      if (!node) return;
+      // 先递归子节点
+      if (node.children && !node._collapsed) {
+        node.children.forEach(c => renderAllSummaries(c));
+      }
+      if (node.summaries && node.summaries.length > 0 && !node._collapsed) {
+        node.summaries.forEach(s => {
+          const x = s._bracketStartX;
+          const y1 = s._bracketMinY;
+          const y2 = s._bracketMaxY;
+          const ym = s._bracketMidY;
+          const height = Math.max(12, y2 - y1);
+          const r = Math.min(6, Math.max(2, height / 6));
+          const w = Math.min(10, Math.max(4, height / 5));
+
+          // 绘制平滑自适应大括号 SVG 路径 (单节点紧凑对称，多节点优美自然)
+          const d = `
+            M ${x} ${y1} 
+            Q ${x + w} ${y1} ${x + w} ${y1 + r}
+            L ${x + w} ${Math.max(y1 + r, ym - r)}
+            Q ${x + w} ${ym} ${x + w * 2} ${ym}
+            Q ${x + w} ${ym} ${x + w} ${Math.min(y2 - r, ym + r)}
+            L ${x + w} ${y2 - r}
+            Q ${x + w} ${y2} ${x} ${y2}
+          `;
+          const bracketEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          bracketEl.setAttribute("d", d);
+          bracketEl.setAttribute("class", "summary-bracket");
+          bracketsLayer.appendChild(bracketEl);
+
+          // 大括号尖端连接概要节点的主体中心
+          const sumNode = s.topic;
+          const sumBaseH = sumNode._baseH || sumNode._h;
+          const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          lineEl.setAttribute("d", `M ${x + w * 2} ${ym} L ${sumNode._x - sumNode._w / 2} ${sumNode._y - sumNode._h / 2 + sumBaseH / 2}`);
+          lineEl.setAttribute("class", "map-link");
+          lineEl.style.strokeDasharray = "3 2";
+          linksLayer.appendChild(lineEl);
+
+          // 递归渲染概要节点及其延伸分支
+          renderNodeAndLinks(sumNode, null);
+          renderAllSummaries(sumNode);
+        });
+      }
+    }
+
+    /* =========================================================================
+     * 6. 核心重构与移动引擎：环路检测、节点重挂载与脱离主节点
+     * ========================================================================= */
+    function isDescendantOf(parentCandidate, nodeToCheck) {
+      if (!parentCandidate || !nodeToCheck) return false;
+      if (parentCandidate.id === nodeToCheck.id) return true;
+      if (parentCandidate.children) {
+        for (const child of parentCandidate.children) {
+          if (isDescendantOf(child, nodeToCheck)) return true;
+        }
+      }
+      if (parentCandidate.summaries) {
+        for (const s of parentCandidate.summaries) {
+          if (s.topic && isDescendantOf(s.topic, nodeToCheck)) return true;
+        }
+      }
+      return false;
+    }
+
+    function findNodeInEntireMap(nodeId) {
+      if (!state.currentMap || !nodeId) return null;
+      function search(node) {
+        if (!node) return null;
+        if (node.id === nodeId) return node;
+        if (node.children) {
+          for (const c of node.children) {
+            const r = search(c);
+            if (r) return r;
+          }
+        }
+        if (node.summaries) {
+          for (const s of node.summaries) {
+            if (s.topic) {
+              const r = search(s.topic);
+              if (r) return r;
+            }
+          }
+        }
+        return null;
+      }
+      const inRoot = search(state.currentMap.root);
+      if (inRoot) return inRoot;
+      if (Array.isArray(state.currentMap.freeRoots)) {
+        for (const fRoot of state.currentMap.freeRoots) {
+          const r = search(fRoot);
+          if (r) return r;
+        }
+      }
+      return null;
+    }
+
+    function findParentNode(current, targetId) {
+      if (!current || !current.children) return null;
+      for (const child of current.children) {
+        if (child.id === targetId) return current;
+        const found = findParentNode(child, targetId);
+        if (found) return found;
+      }
+      if (current.summaries) {
+        for (const s of current.summaries) {
+          if (s.topic && s.topic.id === targetId) return current;
+          const found = findParentNode(s.topic, targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function removeNodeFromSource(nodeId) {
+      if (!state.currentMap) return null;
+      if (Array.isArray(state.currentMap.freeRoots)) {
+        const fIdx = state.currentMap.freeRoots.findIndex(r => r.id === nodeId);
+        if (fIdx >= 0) {
+          return state.currentMap.freeRoots.splice(fIdx, 1)[0];
+        }
+      }
+      // 优先在主树中寻找父节点
+      let parent = findParentNode(state.currentMap.root, nodeId);
+      // 找不到时，逐个搜索自由主题子树（支持主树与自由主题之间的分支互移）
+      if (!parent && Array.isArray(state.currentMap.freeRoots)) {
+        for (const fRoot of state.currentMap.freeRoots) {
+          parent = findParentNode(fRoot, nodeId);
+          if (parent) break;
+        }
+      }
+      if (!parent) return null;
+      if (parent && parent.children) {
+        const idx = parent.children.findIndex(c => c.id === nodeId);
+        if (idx >= 0) {
+          const removed = parent.children.splice(idx, 1)[0];
+          if (parent.summaries) {
+            parent.summaries = parent.summaries.filter(s => {
+              if (s.range[0] > idx) s.range[0]--;
+              if (s.range[1] >= idx) s.range[1]--;
+              return s.range[0] <= s.range[1] && s.range[0] < parent.children.length;
+            });
+          }
+          return removed;
+        }
+      }
+      if (parent && parent.summaries) {
+        const sIdx = parent.summaries.findIndex(s => s.topic && s.topic.id === nodeId);
+        if (sIdx >= 0) {
+          const removed = parent.summaries.splice(sIdx, 1)[0].topic;
+          return removed;
+        }
+      }
+      return null;
+    }
+
+    function moveNodeToNewParent(sourceNodeId, targetNodeId) {
+      if (!sourceNodeId || !targetNodeId || sourceNodeId === targetNodeId) return false;
+      if (sourceNodeId === state.currentMap.root.id) {
+        alert("主中心主题不能移动为其他节点的子节点！");
+        return false;
+      }
+      const sourceNode = findNodeInEntireMap(sourceNodeId);
+      const targetNode = findNodeInEntireMap(targetNodeId);
+      if (!sourceNode || !targetNode) return false;
+
+      if (isDescendantOf(sourceNode, targetNode)) {
+        alert("不能将节点移动到自己的子孙分支下！");
+        return false;
+      }
+
+      recordHistory();
+      const extractedNode = removeNodeFromSource(sourceNodeId);
+      if (!extractedNode) return false;
+
+      delete extractedNode._isFreeRoot;
+      delete extractedNode._customX;
+      delete extractedNode._customY;
+
+      if (!targetNode.children) targetNode.children = [];
+      targetNode.children.push(extractedNode);
+      targetNode._collapsed = false;
+
+      selectNode(extractedNode.id);
+      renderMindMap();
+      scheduleAutoSave();
+      setSyncStatus("saved", `已成功将「${extractedNode.text}」移动为「${targetNode.text}」的子分支`);
+      return true;
+    }
+
+    function detachNodeToFreeRoot(nodeId, canvasX = null, canvasY = null) {
+      if (!nodeId || !state.currentMap) return;
+      if (nodeId === state.currentMap.root.id) {
+        alert("主中心主题已经是主节点！");
+        return;
+      }
+      const existingFree = (state.currentMap.freeRoots || []).find(r => r.id === nodeId);
+      if (existingFree) {
+        if (canvasX !== null && canvasY !== null) {
+          recordHistory();
+          existingFree._customX = Math.round(canvasX);
+          existingFree._customY = Math.round(canvasY);
+          renderMindMap();
+          scheduleAutoSave();
+        }
+        return;
+      }
+
+      const node = findNodeInEntireMap(nodeId);
+      if (!node) return;
+
+      recordHistory();
+      const extracted = removeNodeFromSource(nodeId);
+      if (!extracted) return;
+
+      extracted._isFreeRoot = true;
+      extracted._customX = canvasX !== null ? Math.round(canvasX) : (node._x + 60);
+      extracted._customY = canvasY !== null ? Math.round(canvasY) : (node._y + 60);
+
+      if (!Array.isArray(state.currentMap.freeRoots)) state.currentMap.freeRoots = [];
+      state.currentMap.freeRoots.push(extracted);
+
+      selectNode(extracted.id);
+      renderMindMap();
+      scheduleAutoSave();
+      setSyncStatus("saved", `已成功将「${extracted.text}」脱离为独立自由主节点！`);
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      // 节点拖拽启动与移动判定 (优先于画布平移)
+      if (state.drag.node && !state.drag.isDragging) {
+        const dx = e.clientX - state.drag.startX;
+        const dy = e.clientY - state.drag.startY;
+        if (Math.hypot(dx, dy) > 5) {
+          state.drag.isDragging = true;
+          state.isPanning = false;
+          canvasContainer.classList.add("dragging-node");
+          dragGhost.style.display = "block";
+          dragGhost.textContent = `移动: ${state.drag.node.text}`;
+          dragTipBar.style.display = "block";
+          dragTipBar.textContent = `松手释放在节点上成为子分支，释放在空白处独立为主节点`;
+        }
+      }
+
+      if (state.drag.isDragging) {
+        dragGhost.style.left = e.clientX + 15 + "px";
+        dragGhost.style.top = e.clientY + 15 + "px";
+
+        const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+        const nodeGroup = elUnder ? elUnder.closest(".node-group") : null;
+        if (nodeGroup) {
+          const targetId = nodeGroup.getAttribute("data-id");
+          if (targetId && targetId !== state.drag.node.id) {
+            const targetNode = findNodeInEntireMap(targetId);
+            if (targetNode && !isDescendantOf(state.drag.node, targetNode)) {
+              state.drag.targetNode = targetNode;
+              document.querySelectorAll(".node-group").forEach(el => {
+                if (el.getAttribute("data-id") === targetId) el.classList.add("drag-hover");
+                else el.classList.remove("drag-hover");
+              });
+              return;
+            }
+          }
+        }
+        if (state.drag.targetNode) {
+          state.drag.targetNode = null;
+          document.querySelectorAll(".node-group").forEach(el => {
+            if (el.getAttribute("data-id") !== state.selectedNodeId) el.classList.remove("drag-hover");
+            else el.classList.remove("drag-hover");
+          });
+        }
+        return;
+      }
+
+      if (state.isPanning) {
+        state.panX = e.clientX - state.panStartX;
+        state.panY = e.clientY - state.panStartY;
+        updateViewportTransform();
+      }
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      if (state.isPanning) {
+        state.isPanning = false;
+        canvasContainer.classList.remove("grabbing");
+        if (state.currentMapId) saveViewState(state.currentMapId);
+      }
+
+      if (state.drag.isDragging) {
+        const dragNode = state.drag.node;
+        const targetNode = state.drag.targetNode;
+        const canvasX = (e.clientX - state.panX) / state.zoom;
+        const canvasY = (e.clientY - state.panY) / state.zoom;
+
+        dragTipBar.style.display = "none";
+        dragGhost.style.display = "none";
+        canvasContainer.classList.remove("dragging-node");
+        document.querySelectorAll(".node-group").forEach(el => el.classList.remove("drag-hover"));
+
+        if (targetNode) {
+          moveNodeToNewParent(dragNode.id, targetNode.id);
+        } else {
+          // 判断拖动的是否本身就是自由主节点：是则直接更新其坐标，不再走“脱离”逻辑
+          const isFreeRootNode = (state.currentMap.freeRoots || []).some(r => r.id === dragNode.id);
+          if (isFreeRootNode) {
+            recordHistory();
+            const fr = state.currentMap.freeRoots.find(r => r.id === dragNode.id);
+            fr._customX = Math.round(canvasX);
+            fr._customY = Math.round(canvasY);
+            fr._x = fr._customX;
+            fr._y = fr._customY;
+            renderMindMap();
+            scheduleAutoSave();
+            setSyncStatus("saved", `已移动自由主题「${fr.text}」`);
+          } else {
+            detachNodeToFreeRoot(dragNode.id, canvasX, canvasY);
+          }
+        }
+      }
+
+      state.drag.isDragging = false;
+      state.drag.node = null;
+      state.drag.targetNode = null;
+    });
+
+    function startPickMoveTarget() {
+      if (!state.selectedNodeId) return;
+      state.drag.isPickMoveTarget = true;
+      dragTipBar.style.display = "block";
+      dragTipBar.textContent = "请用鼠标单击画布上的任意目标节点，选中的分支将立即移至该节点下 (按 ESC 取消)";
+    }
+
+    function finishPickMoveTarget(targetNode) {
+      dragTipBar.style.display = "none";
+      state.drag.isPickMoveTarget = false;
+      if (targetNode && state.selectedNodeId) {
+        moveNodeToNewParent(state.selectedNodeId, targetNode.id);
+      }
+    }
+
+    /* =========================================================================
+     * 7. 节点选择与多选交互
+     * ========================================================================= */
+    function handleNodeClick(node, e) {
+      if (e.ctrlKey || e.metaKey) {
+        if (state.selectedNodeIds.has(node.id)) {
+          state.selectedNodeIds.delete(node.id);
+          if (state.selectedNodeId === node.id) {
+            state.selectedNodeId = state.selectedNodeIds.size > 0 ? Array.from(state.selectedNodeIds)[0] : null;
+          }
+        } else {
+          state.selectedNodeIds.add(node.id);
+          state.selectedNodeId = node.id;
+        }
+      } else {
+        state.selectedNodeIds.clear();
+        state.selectedNodeId = node.id;
+        state.selectedNodeIds.add(node.id);
+      }
+      updateMultiSelectUI();
+      refreshSelectionVisuals();
+    }
+
+    function selectNode(nodeId) {
+      state.selectedNodeId = nodeId;
+      state.selectedNodeIds.clear();
+      if (nodeId) state.selectedNodeIds.add(nodeId);
+      updateMultiSelectUI();
+      refreshSelectionVisuals();
+    }
+
+    function refreshSelectionVisuals() {
+      document.querySelectorAll(".node-group").forEach(el => {
+        const nid = el.getAttribute("data-id");
+        if (nid === state.selectedNodeId) el.classList.add("selected");
+        else el.classList.remove("selected");
+
+        if (state.selectedNodeIds.has(nid) && state.selectedNodeIds.size > 1) {
+          el.classList.add("multi-selected");
+        } else {
+          el.classList.remove("multi-selected");
+        }
+      });
+    }
+
+    function updateMultiSelectUI() {
+      const count = state.selectedNodeIds.size;
+      if (count > 1) {
+        multiBadge.style.display = "inline-flex";
+        multiBadge.textContent = count;
+      } else {
+        multiBadge.style.display = "none";
+      }
+    }
+
+    function findAncestors(current, targetId, path = []) {
+      if (!current) return null;
+      const newPath = [...path, current];
+      if (current.id === targetId) return newPath;
+      if (current.children) {
+        for (const c of current.children) {
+          const found = findAncestors(c, targetId, newPath);
+          if (found) return found;
+        }
+      }
+      if (current.summaries) {
+        for (const s of current.summaries) {
+          if (s.topic) {
+            const found = findAncestors(s.topic, targetId, newPath);
+            if (found) return found;
+          }
+        }
+      }
+      return null;
+    }
+
+    function findLowestCommonAncestor(root, id1, id2) {
+      const p1 = findAncestors(root, id1);
+      const p2 = findAncestors(root, id2);
+      if (!p1 || !p2) return root;
+      let lca = root;
+      const minLen = Math.min(p1.length, p2.length);
+      for (let i = 0; i < minLen; i++) {
+        if (p1[i].id === p2[i].id) {
+          lca = p1[i];
+        } else {
+          break;
+        }
+      }
+      return lca;
+    }
+
+    function addSummaryToSelection() {
+      if (!state.currentMap || state.selectedNodeIds.size === 0) {
+        alert("请先点击选中一个节点，或按住 Ctrl 点选多个节点后点击概要！");
+        return;
+      }
+      const selectedIds = Array.from(state.selectedNodeIds);
+      recordHistory();
+
+      let attachParent = null;
+      let targetIds = [...selectedIds];
+      let range = [0, 0];
+
+      if (selectedIds.length === 1) {
+        // 单节点概要
+        const targetNode = findNodeInEntireMap(selectedIds[0]);
+        attachParent = findParentNode(state.currentMap.root, selectedIds[0]);
+        if (!attachParent) {
+          // 根节点自身概要
+          attachParent = state.currentMap.root;
+        }
+        if (attachParent.children && attachParent.children.length > 0) {
+          const idx = attachParent.children.findIndex(c => c.id === targetNode.id);
+          if (idx !== -1) {
+            range = [idx, idx];
+          }
+        }
+      } else {
+        // 多节点概要：可能是同级兄弟节点，也可能是跨分支的总体概要
+        const p0 = findParentNode(state.currentMap.root, selectedIds[0]);
+        const allSameParent = p0 && p0.children && selectedIds.every(id => p0.children.some(c => c.id === id));
+        if (allSameParent) {
+          attachParent = p0;
+          const childIndices = [];
+          attachParent.children.forEach((c, idx) => {
+            if (state.selectedNodeIds.has(c.id)) {
+              childIndices.push(idx);
+            }
+          });
+          const minIdx = Math.min(...childIndices);
+          const maxIdx = Math.max(...childIndices);
+          range = [minIdx, maxIdx];
+        } else {
+          // 跨分支或针对分支概要框进行“总体概要”：挂载在最近公共祖先(根节点)
+          let lca = state.currentMap.root;
+          for (let i = 1; i < selectedIds.length; i++) {
+            lca = findLowestCommonAncestor(state.currentMap.root, selectedIds[0], selectedIds[i]);
+          }
+          attachParent = lca || state.currentMap.root;
+        }
+      }
+
+      if (!attachParent.summaries) attachParent.summaries = [];
+      const summaryId = "sum-" + Date.now();
+      const summaryTopicId = "sum-topic-" + Date.now();
+      const newSummary = {
+        id: summaryId,
+        range: range,
+        targetNodeIds: targetIds,
+        topic: {
+          id: summaryTopicId,
+          text: "概要",
+          note: "",
+          labels: [],
+          children: []
+        }
+      };
+
+      attachParent.summaries.push(newSummary);
+      selectNode(summaryTopicId);
+      renderMindMap();
+      scheduleAutoSave();
+      setTimeout(() => {
+        startInlineEdit(newSummary.topic);
+      }, 80);
+    }
+
+    /* =========================================================================
+     * 8. 节点增删改操作
+     * ========================================================================= */
+    function addChildNode() {
+      if (!state.selectedNodeId || !state.currentMap) return;
+      const node = findNodeInEntireMap(state.selectedNodeId);
+      if (!node) return;
+      recordHistory();
+      if (!node.children) node.children = [];
+      node._collapsed = false;
+      const newId = "node-" + Date.now();
+      const newNode = { id: newId, text: "分支主题", labels: [], children: [] };
+      node.children.push(newNode);
+      selectNode(newId);
+      renderMindMap();
+      scheduleAutoSave();
+      setTimeout(() => startInlineEdit(newNode), 50);
+    }
+
+    function addSiblingNode() {
+      if (!state.selectedNodeId || !state.currentMap) return;
+      if (state.selectedNodeId === state.currentMap.root.id) {
+        addChildNode();
+        return;
+      }
+      // 自由主节点的同级：新建自由主节点
+      const freeIdx = (state.currentMap.freeRoots || []).findIndex(r => r.id === state.selectedNodeId);
+      if (freeIdx >= 0) {
+        recordHistory();
+        const prev = state.currentMap.freeRoots[freeIdx];
+        const newFree = {
+          id: "free-" + Date.now(),
+          text: "自由主题",
+          labels: [],
+          children: [],
+          summaries: [],
+          _customX: (prev._customX || 0),
+          _customY: (prev._customY || 0) + (prev._treeHeight || 80) + 40,
+          _isFreeRoot: true
+        };
+        state.currentMap.freeRoots.splice(freeIdx + 1, 0, newFree);
+        selectNode(newFree.id);
+        renderMindMap();
+        scheduleAutoSave();
+        setTimeout(() => startInlineEdit(newFree), 50);
+        return;
+      }
+
+      const parent = findParentNode(state.currentMap.root, state.selectedNodeId);
+      if (!parent) {
+        // 在自由主节点的树下寻找
+        if (Array.isArray(state.currentMap.freeRoots)) {
+          for (const fRoot of state.currentMap.freeRoots) {
+            const p = findParentNode(fRoot, state.selectedNodeId);
+            if (p) {
+              recordHistory();
+              const newId = "node-" + Date.now();
+              const newNode = { id: newId, text: "分支主题", labels: [], children: [] };
+              const curIdx = p.children.findIndex(c => c.id === state.selectedNodeId);
+              p.children.splice(curIdx + 1, 0, newNode);
+              selectNode(newId);
+              renderMindMap();
+              scheduleAutoSave();
+              setTimeout(() => startInlineEdit(newNode), 50);
+              return;
+            }
+          }
+        }
+        return;
+      }
+
+      recordHistory();
+      const newId = "node-" + Date.now();
+      const newNode = { id: newId, text: "分支主题", labels: [], children: [] };
+      const curIdx = parent.children.findIndex(c => c.id === state.selectedNodeId);
+      if (curIdx >= 0) {
+        parent.children.splice(curIdx + 1, 0, newNode);
+      } else {
+        parent.children.push(newNode);
+      }
+      selectNode(newId);
+      renderMindMap();
+      scheduleAutoSave();
+      setTimeout(() => startInlineEdit(newNode), 50);
+    }
+
+    function deleteSelectedNode() {
+      if (!state.selectedNodeId || !state.currentMap) return;
+      if (state.selectedNodeId === state.currentMap.root.id) {
+        alert("不能删除中心主主题！");
+        return;
+      }
+      recordHistory();
+      const removed = removeNodeFromSource(state.selectedNodeId);
+      if (removed) {
+        selectNode(state.currentMap.root.id);
+        renderMindMap();
+        scheduleAutoSave();
+      }
+    }
+
+    function startInlineEdit(node) {
+      if (!node) return;
+      const screenX = state.panX + node._x * state.zoom;
+      const screenY = state.panY + node._y * state.zoom;
+      const baseH = node._baseH || node._h;
+      inlineEditor.style.left = `${screenX - (node._w / 2) * state.zoom}px`;
+      inlineEditor.style.top = `${screenY - (node._h / 2) * state.zoom}px`;
+      inlineEditor.style.width = `${Math.max(120, node._w * state.zoom)}px`;
+      inlineEditor.style.height = `${Math.max(34, baseH * state.zoom)}px`;
+      inlineEditor.style.transformOrigin = "center";
+      inlineEditor.style.fontSize = `${Math.round((node._level === 0 ? 16 : 13) * state.zoom)}px`;
+      inlineEditor.value = node.text || "";
+      inlineEditor.style.display = "block";
+      inlineEditor.focus();
+      inlineEditor.select();
+
+      function finishEdit() {
+        inlineEditor.style.display = "none";
+        inlineEditor.onblur = null;
+        inlineEditor.onkeydown = null;
+        const newText = inlineEditor.value.trim();
+        if (newText && newText !== node.text) {
+          recordHistory();
+          node.text = newText;
+          renderMindMap();
+          scheduleAutoSave();
+        }
+      }
+      inlineEditor.onblur = finishEdit;
+      inlineEditor.onkeydown = (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          finishEdit();
+        } else if (e.key === "Escape") {
+          inlineEditor.style.display = "none";
+          inlineEditor.onblur = null;
+        }
+      };
+    }
+
+    /* =========================================================================
+     * 9. 节点标签 弹窗与核心交互
+     * ========================================================================= */
+    function openLabelModal(node) {
+      if (!node) return;
+      state.editingLabelNode = node;
+      const currentLabels = getNodeLabels(node);
+      labelModalInput.value = currentLabels.join(", ");
+      labelModal.style.display = "block";
+      labelModalInput.focus();
+      labelModalInput.select();
+    }
+
+    function closeLabelModal() {
+      labelModal.style.display = "none";
+      state.editingLabelNode = null;
+    }
+
+    function saveLabelEdit() {
+      if (!state.editingLabelNode) return;
+      const val = labelModalInput.value.trim();
+      recordHistory();
+      if (!val) {
+        state.editingLabelNode.labels = [];
+        delete state.editingLabelNode.label;
+      } else {
+        const splitted = val.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+        state.editingLabelNode.labels = splitted;
+        delete state.editingLabelNode.label;
+      }
+      renderMindMap();
+      scheduleAutoSave();
+      closeLabelModal();
+    }
+
+    document.getElementById("btn-close-label").onclick = closeLabelModal;
+    document.getElementById("btn-cancel-label").onclick = closeLabelModal;
+    document.getElementById("btn-save-label").onclick = saveLabelEdit;
+    document.getElementById("btn-clear-label").onclick = () => {
+      labelModalInput.value = "";
+      saveLabelEdit();
+    };
+    labelModalInput.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveLabelEdit();
+      } else if (e.key === "Escape") {
+        closeLabelModal();
+      }
+    };
+    document.getElementById("btn-edit-label").onclick = () => {
+      if (state.selectedNodeId) openLabelModal(findNodeInEntireMap(state.selectedNodeId));
+    };
+
+    /* =========================================================================
+     * 10. 上下文右键菜单
+     * ========================================================================= */
+    let lastRightClickPos = { x: 0, y: 0 };
+    function showContextMenu(x, y, isNode) {
+      lastRightClickPos = { x, y };
+      contextMenu.style.left = Math.min(x, window.innerWidth - 220) + "px";
+      contextMenu.style.top = Math.min(y, window.innerHeight - 380) + "px";
+      document.getElementById("menu-node-actions").style.display = isNode ? "block" : "none";
+      document.getElementById("menu-canvas-actions").style.display = isNode ? "none" : "block";
+      contextMenu.style.display = "block";
+    }
+
+    function hideContextMenu() {
+      contextMenu.style.display = "none";
+    }
+
+    window.addEventListener("click", () => {
+      hideContextMenu();
+      document.querySelectorAll(".popover").forEach(p => p.style.display = "none");
+    });
+
+    canvasContainer.oncontextmenu = (e) => {
+      e.preventDefault();
+      showContextMenu(e.clientX, e.clientY, false);
+    };
+
+    // 菜单项绑定
+    document.getElementById("ctx-add-child").onclick = () => { hideContextMenu(); addChildNode(); };
+    document.getElementById("ctx-add-sibling").onclick = () => { hideContextMenu(); addSiblingNode(); };
+    document.getElementById("ctx-add-summary").onclick = () => { hideContextMenu(); addSummaryToSelection(); };
+    document.getElementById("ctx-edit-label").onclick = () => {
+      hideContextMenu();
+      if (state.selectedNodeId) openLabelModal(findNodeInEntireMap(state.selectedNodeId));
+    };
+    document.getElementById("ctx-detach-node").onclick = () => {
+      hideContextMenu();
+      if (state.selectedNodeId) detachNodeToFreeRoot(state.selectedNodeId);
+    };
+    document.getElementById("ctx-move-mode").onclick = () => {
+      hideContextMenu();
+      startPickMoveTarget();
+    };
+    document.getElementById("ctx-edit-text").onclick = () => {
+      hideContextMenu();
+      if (state.selectedNodeId) startInlineEdit(findNodeInEntireMap(state.selectedNodeId));
+    };
+    document.getElementById("ctx-edit-note").onclick = () => {
+      hideContextMenu();
+      if (state.selectedNodeId) openNoteModal(findNodeInEntireMap(state.selectedNodeId));
+    };
+    document.getElementById("ctx-toggle-collapse").onclick = () => {
+      hideContextMenu();
+      if (state.selectedNodeId) {
+        const node = findNodeInEntireMap(state.selectedNodeId);
+        if (node) { node._collapsed = !node._collapsed; renderMindMap(); }
+      }
+    };
+    document.getElementById("ctx-delete-node").onclick = () => { hideContextMenu(); deleteSelectedNode(); };
+    const _ctxTidyFree = document.getElementById("ctx-tidy-free");
+    if (_ctxTidyFree) _ctxTidyFree.onclick = () => { hideContextMenu(); tidyFreeRoots(); };
+    document.getElementById("ctx-add-free").onclick = () => {
+      hideContextMenu();
+      const canvasX = (lastRightClickPos.x - state.panX) / state.zoom;
+      const canvasY = (lastRightClickPos.y - state.panY) / state.zoom;
+      const newFree = {
+        id: "free-" + Date.now(),
+        text: "自由主题",
+        labels: [],
+        children: [],
+        summaries: [],
+        _customX: Math.round(canvasX),
+        _customY: Math.round(canvasY),
+        _isFreeRoot: true
+      };
+      if (!Array.isArray(state.currentMap.freeRoots)) state.currentMap.freeRoots = [];
+      recordHistory();
+      state.currentMap.freeRoots.push(newFree);
+      selectNode(newFree.id);
+      renderMindMap();
+      scheduleAutoSave();
+      setTimeout(() => startInlineEdit(newFree), 80);
+    };
+    document.getElementById("ctx-reset-view").onclick = () => { hideContextMenu(); resetView(); };
+    document.getElementById("ctx-import-map").onclick = () => { hideContextMenu(); openImportModal(); };
+    document.getElementById("ctx-export-png").onclick = () => { hideContextMenu(); exportToPng(); };
+
+    /* =========================================================================
+     * 11. 节点笔记 (Note) 弹窗
+     * ========================================================================= */
+    function openNoteModal(node) {
+      if (!node) return;
+      state.editingNoteNode = node;
+      document.getElementById("note-target-name").textContent = `笔记：「${node.text}」`;
+      noteEditor.innerHTML = node.note || "";
+      const screenX = state.panX + node._x * state.zoom;
+      const screenY = state.panY + node._y * state.zoom;
+      noteModal.style.left = Math.min(Math.max(20, screenX - 190), window.innerWidth - 400) + "px";
+      noteModal.style.top = Math.min(Math.max(70, screenY + 30), window.innerHeight - 300) + "px";
+      noteModal.style.display = "block";
+    }
+
+    function addNoteLink() {
+      const url = prompt("请输入超链接 URL:", "https://");
+      if (url) document.execCommand("createLink", false, url);
+    }
+
+    document.getElementById("btn-save-note").onclick = () => {
+      if (state.editingNoteNode) {
+        recordHistory();
+        state.editingNoteNode.note = noteEditor.innerHTML.trim();
+        scheduleAutoSave();
+        renderMindMap();
+      }
+      noteModal.style.display = "none";
+    };
+    document.getElementById("btn-close-note").onclick = () => { noteModal.style.display = "none"; };
+    document.getElementById("btn-add-note").onclick = () => {
+      if (state.selectedNodeId) openNoteModal(findNodeInEntireMap(state.selectedNodeId));
+    };
+
+    /* =========================================================================
+     * 12. 全局快捷键与事件监听 (支持 Ctrl + L 快捷编辑标签)
+     * ========================================================================= */
+    window.addEventListener("keydown", (e) => {
+      // 快捷键: Ctrl + S / Cmd + S (手动保存导图)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        saveCurrentMap(true);
+        return;
+      }
+
+      if (inlineEditor.style.display === "block") return;
+      if (noteModal.style.display === "block") return;
+      if (labelModal.style.display === "block") return;
+      if (importModal.style.display === "block") return;
+
+      if (e.key === "Escape" && state.drag.isPickMoveTarget) {
+        dragTipBar.style.display = "none";
+        state.drag.isPickMoveTarget = false;
+        return;
+      }
+
+      // 快捷键: Ctrl + L (标签编辑)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "l" || e.key === "L")) {
+        e.preventDefault();
+        if (state.selectedNodeId) {
+          openLabelModal(findNodeInEntireMap(state.selectedNodeId));
+        }
+        return;
+      }
+
+      // 快捷键: Ctrl + Shift + D (脱离为独立主节点)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "D" || e.key === "d")) {
+        e.preventDefault();
+        if (state.selectedNodeId) detachNodeToFreeRoot(state.selectedNodeId);
+        return;
+      }
+
+      // 快捷键: Ctrl + ] (概要)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "]" || e.key === "}")) {
+        e.preventDefault();
+        addSummaryToSelection();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+        addChildNode();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        addSiblingNode();
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+          e.preventDefault();
+          deleteSelectedNode();
+        }
+      } else if (e.key === " " && state.selectedNodeId) {
+        e.preventDefault();
+        startInlineEdit(findNodeInEntireMap(state.selectedNodeId));
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "Z"))) {
+        e.preventDefault();
+        redo();
+      }
+    });
+
+    /* =========================================================================
+     * 13. 画布拖拽平移与滚轮缩放
+     * ========================================================================= */
+    canvasContainer.onmousedown = (e) => {
+      // 如果在节点或操作控件上按下鼠标，直接返回，绝不触发画布平移
+      if (e.target.closest && (e.target.closest(".node-group") || e.target.closest(".collapse-btn") || e.target.closest(".note-badge"))) return;
+      if (e.button === 0 && !state.drag.isDragging && !state.drag.node) {
+        state.isPanning = true;
+        state.panStartX = e.clientX - state.panX;
+        state.panStartY = e.clientY - state.panY;
+        canvasContainer.classList.add("grabbing");
+      }
+    };
+
+    canvasContainer.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      const newZoom = Math.min(2.5, Math.max(0.25, state.zoom * zoomFactor));
+      const rect = canvasContainer.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
+      state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
+      state.zoom = newZoom;
+      zoomText.textContent = Math.round(state.zoom * 100) + "%";
+      updateViewportTransform();
+      if (state.currentMapId) saveViewState(state.currentMapId);
+    }, { passive: false });
+
+    function updateViewportTransform() {
+      viewportGroup.setAttribute("transform", `translate(${state.panX}, ${state.panY}) scale(${state.zoom})`);
+    }
+
+    /* ---------- 每个文档独立记忆视图位置 ---------- */
+    // 记录当前视图到指定文档
+    function saveViewState(mapId) {
+      if (!mapId) return;
+      state.viewStates[mapId] = { panX: state.panX, panY: state.panY, zoom: state.zoom };
+      // 同步写入当前文档对象，随保存一起持久化到服务端
+      if (state.currentMap && state.currentMapId === mapId) {
+        state.currentMap.view = state.viewStates[mapId];
+      }
+    }
+    // 从文档记录恢复视图；无记录则自动居中
+    function restoreViewState(mapId) {
+      const saved = (mapId && state.viewStates[mapId]) || (state.currentMap && state.currentMap.view) || null;
+      if (saved && typeof saved.panX === "number" && typeof saved.panY === "number") {
+        state.panX = saved.panX;
+        state.panY = saved.panY;
+        state.zoom = typeof saved.zoom === "number" ? saved.zoom : 1.0;
+        if (mapId) state.viewStates[mapId] = { panX: state.panX, panY: state.panY, zoom: state.zoom };
+        zoomText.textContent = Math.round(state.zoom * 100) + "%";
+        updateViewportTransform();
+        return true;
+      }
+      resetView();
+      if (mapId) saveViewState(mapId);
+      return false;
+    }
+    /* ---------- 自动适应内容：确保主树与所有自由节点都在视野内 ---------- */
+    function fitToContent() {
+      if (!state.currentMap) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const acc = (n) => {
+        if (!n || n._x === undefined) return;
+        const w = n._w || 0, h = n._h || 0;
+        minX = Math.min(minX, n._x - w / 2); maxX = Math.max(maxX, n._x + w / 2);
+        minY = Math.min(minY, n._y - h / 2); maxY = Math.max(maxY, n._y + h / 2);
+        if (n.children && !n._collapsed) n.children.forEach(acc);
+        if (n.summaries && !n._collapsed) n.summaries.forEach(s => { if (s.topic) acc(s.topic); });
+      };
+      acc(state.currentMap.root);
+      (state.currentMap.freeRoots || []).forEach(acc);
+      if (!isFinite(minX)) { resetView(); return; }
+      const cw = canvasContainer.clientWidth || 1200;
+      const ch = canvasContainer.clientHeight || 800;
+      const contentW = Math.max(1, maxX - minX);
+      const contentH = Math.max(1, maxY - minY);
+      const pad = 80;
+      let z = Math.min((cw - pad * 2) / contentW, (ch - pad * 2) / contentH);
+      z = Math.min(1.2, Math.max(0.15, z));
+      state.zoom = z;
+      zoomText.textContent = Math.round(z * 100) + "%";
+      // 让内容中心对齐画布中心
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      state.panX = cw / 2 - cx * z;
+      state.panY = ch / 2 - cy * z;
+      updateViewportTransform();
+      if (state.currentMapId) saveViewState(state.currentMapId);
+    }
+    /* ---------- 一键整理：把跑远的自由节点拉回主树附近 ---------- */
+    function tidyFreeRoots() {
+      if (!state.currentMap) return;
+      const list = state.currentMap.freeRoots || [];
+      if (list.length === 0) { alert("当前没有自由节点"); return; }
+      recordHistory();
+      const root = state.currentMap.root;
+      const baseX = (root._x || 0) + (root._w || 120) / 2 + 260;
+      let curY = (root._y || 0) - ((list.length - 1) * 140) / 2;
+      list.forEach((fr, i) => {
+        fr._customX = Math.round(baseX + (i % 2) * 220);
+        fr._customY = Math.round(curY + i * 140);
+        fr._x = fr._customX;
+        fr._y = fr._customY;
+      });
+      renderMindMap();
+      scheduleAutoSave();
+      setTimeout(fitToContent, 60);
+      setSyncStatus("saved", `已整理 ${list.length} 个自由节点到主树附近`);
+    }
+    function resetView() {
+      const containerW = canvasContainer.clientWidth;
+      const containerH = canvasContainer.clientHeight;
+      state.zoom = 1.0;
+      zoomText.textContent = "100%";
+      state.panX = containerW * 0.22;
+      state.panY = containerH * 0.5;
+      updateViewportTransform();
+      if (state.currentMapId) saveViewState(state.currentMapId);
+    }
+
+    document.getElementById("btn-zoom-in").onclick = () => {
+      state.zoom = Math.min(2.5, state.zoom * 1.15);
+      zoomText.textContent = Math.round(state.zoom * 100) + "%";
+      updateViewportTransform();
+      if (state.currentMapId) saveViewState(state.currentMapId);
+    };
+    document.getElementById("btn-zoom-out").onclick = () => {
+      state.zoom = Math.max(0.25, state.zoom / 1.15);
+      zoomText.textContent = Math.round(state.zoom * 100) + "%";
+      if (state.currentMapId) saveViewState(state.currentMapId);
+      updateViewportTransform();
+    };
+    document.getElementById("btn-reset-view").onclick = fitToContent;
+    document.getElementById("btn-save-map").onclick = () => saveCurrentMap(true);
+    document.getElementById("btn-undo").onclick = undo;
+    document.getElementById("btn-redo").onclick = redo;
+    document.getElementById("btn-add-child").onclick = addChildNode;
+    document.getElementById("btn-add-sibling").onclick = addSiblingNode;
+    document.getElementById("btn-add-summary").onclick = addSummaryToSelection;
+
+    /* =========================================================================
+     * 14. 导图侧边抽屉管理
+     * ========================================================================= */
+    const drawer = document.getElementById("drawer");
+    const drawerMask = document.getElementById("drawer-mask");
+    const mapListContainer = document.getElementById("map-list-container");
+
+    async function openDrawer() {
+      drawer.classList.add("open");
+      drawerMask.style.display = "block";
+      const list = await fetchApi("/api/maps");
+      if (list && Array.isArray(list)) renderMapList(list);
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      drawerMask.style.display = "none";
+    }
+
+    window._cachedDocMaps = [];
+    function renderMapList(maps) {
+      window._cachedDocMaps = maps || [];
+      mapListContainer.innerHTML = "";
+      maps.forEach(m => {
+        const item = document.createElement("div");
+        item.className = "map-item" + (m.id === state.currentMapId ? " active" : "");
+        item.innerHTML = `
+          <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;flex:1;">
+            <div class="map-title-text" style="font-size:13px;font-weight:600;">${escapeHtml(m.title || "未命名导图")}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+              ${m.nodeCount || 0} 个节点 · ${new Date(m.updatedAt).toLocaleDateString()}
+            </div>
+          </div>
+          <div class="map-actions">
+            <button class="map-action-btn map-rename-btn" title="重命名导图">✏️</button>
+            <button class="map-action-btn map-del-btn" title="删除导图">🗑️</button>
+          </div>
+        `;
+        item.onclick = async (e) => {
+          if (e.target.closest(".map-actions")) return;
+          // 点击的就是当前已打开的文档：直接关闭抽屉返回，绝不重新加载，避免未保存修改被覆盖丢失
+          if (m.id === state.currentMapId) {
+            closeDrawer();
+            return;
+          }
+          await confirmLeaveUnsaved();
+          closeDrawer();
+          loadCurrentMap(m.id);
+        };
+        
+        // ✏️ 重命名导图（严格重名防御，名字不可重复）
+        const renameBtn = item.querySelector(".map-rename-btn");
+        renameBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const oldTitle = m.title || "新思维导图";
+          const input = prompt("请输入导图新名称:", oldTitle);
+          if (input === null) return;
+          const newName = input.trim();
+          if (!newName) {
+            alert("导图名称不能为空！");
+            return;
+          }
+          if (newName.toLowerCase() === oldTitle.trim().toLowerCase()) return;
+          
+          // 前端重名拦截校验
+          const isConflict = (window._cachedDocMaps || []).some(other => 
+            other.id !== m.id && (other.title || "").trim().toLowerCase() === newName.toLowerCase()
+          );
+          if (isConflict) {
+            alert(`已存在名为「${newName}」的思维导图，导图名称不可重复，请更换名称！`);
+            return;
+          }
+          
+          const res = await fetchApi("/api/map/rename", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: m.id, title: newName })
+          });
+          if (res && res.ok) {
+            if (m.id === state.currentMapId) {
+              state.currentMap.title = newName;
+              displayTitle.textContent = newName;
+            }
+            openDrawer();
+          } else if (res && res.error) {
+            alert(res.error);
+          }
+        };
+        // 🗑️ 删除导图（支持删除最后一个：删除后自动重置为全新空白导图）
+        const delBtn = item.querySelector(".map-del-btn");
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const isLastOne = (window._cachedDocMaps || []).length <= 1;
+          const confirmMsg = isLastOne
+            ? `这是文档库中的最后一份思维导图「${m.title}」。\n删除后将彻底清空当前内容，并重置为全新空白思维导图，确定删除吗？`
+            : `确定要彻底删除思维导图「${m.title}」吗？删除后不可恢复。`;
+          if (confirm(confirmMsg)) {
+            if (m.id === state.currentMapId) await confirmLeaveUnsaved();
+            const res = await fetchApi("/api/map/delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: m.id })
+            });
+            if (res && res.ok) {
+              openDrawer();
+              // 如果删除的是当前打开的导图，或者清空了最后一个，立即加载最新（或全新空白）导图
+              if (m.id === state.currentMapId || isLastOne) {
+                loadCurrentMap(res.currentId);
+              }
+            } else if (res && res.error) {
+              alert(res.error);
+            }
+          }
+        };
+        mapListContainer.appendChild(item);
+      });
+    }
+    document.getElementById("btn-open-drawer").onclick = openDrawer;
+    document.getElementById("btn-close-drawer").onclick = closeDrawer;
+    drawerMask.onclick = closeDrawer;
+    // ➕ 新建空白思维导图（名字不可重复防护）
+    document.getElementById("btn-create-map").onclick = async () => {
+      // 自动计算一个推荐的默认不重复名称
+      let defaultName = "新思维导图";
+      const existing = (window._cachedDocMaps || []).map(m => (m.title || "").trim().toLowerCase());
+      if (existing.includes(defaultName.toLowerCase())) {
+        let idx = 1;
+        while (existing.includes(`${defaultName} (${idx})`.toLowerCase())) {
+          idx++;
+        }
+        defaultName = `${defaultName} (${idx})`;
+      }
+      
+      const input = prompt("请输入新导图标题:", defaultName);
+      if (input === null) return;
+      const targetName = (input.trim() || defaultName);
+      
+      // 前端严格排重拦截
+      if (existing.includes(targetName.toLowerCase())) {
+        alert(`已存在名为「${targetName}」的思维导图，导图名称不可重复，请更换名称！`);
+        return;
+      }
+      
+      // 新建会切换到新文档：先走未保存保护，避免当前修改丢失
+      await confirmLeaveUnsaved();
+      const res = await fetchApi("/api/map/new", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: targetName, theme: state.theme, layout: state.layout })
+      });
+      if (res && res.id) {
+        closeDrawer();
+        loadCurrentMap(res.id);
+      } else {
+        alert("新建失败：" + ((res && res.error) || "服务端无响应，请检查应用是否正常运行"));
+      }
+    };
+    // 顶部标题点击直接重命名（增加严格重名校验）
+    displayTitle.onclick = async () => {
+      const oldTitle = displayTitle.textContent;
+      const input = prompt("请输入思维导图新标题:", oldTitle);
+      if (input === null) return;
+      const newTitle = input.trim();
+      if (!newTitle || newTitle === oldTitle) return;
+      
+      // 检查是否与其他导图重名
+      if (window._cachedDocMaps && window._cachedDocMaps.length > 0) {
+        const isConflict = window._cachedDocMaps.some(other =>
+          other.id !== state.currentMapId && (other.title || "").trim().toLowerCase() === newTitle.toLowerCase()
+        );
+        if (isConflict) {
+          alert(`已存在名为「${newTitle}」的思维导图，导图名称不可重复！`);
+          return;
+        }
+      }
+      
+      recordHistory();
+      state.currentMap.title = newTitle;
+      displayTitle.textContent = newTitle;
+      scheduleAutoSave();
+    };
+    /* =========================================================================
+     * 15. 主题切换与导出功能
+     * ========================================================================= */
+    const themePopover = document.getElementById("theme-popover");
+    /* ---------- 布局设置面板交互 ---------- */
+    const layoutPopover = document.getElementById("layout-popover");
+    const rngHGap = document.getElementById("rng-hgap");
+    const rngVGap = document.getElementById("rng-vgap");
+    const rngRootGap = document.getElementById("rng-rootgap");
+    const rngWrap = document.getElementById("rng-wrap");
+    function syncLayoutPanel(cfg) {
+      const c = Object.assign({}, LAYOUT_DEFAULTS, cfg || {});
+      rngHGap.value = c.hGap; rngVGap.value = c.vGap; rngRootGap.value = c.rootHGap; rngWrap.value = c.wrapWidth;
+      document.getElementById("val-hgap").textContent = c.hGap;
+      document.getElementById("val-vgap").textContent = c.vGap;
+      document.getElementById("val-rootgap").textContent = c.rootHGap;
+      document.getElementById("val-wrap").textContent = c.wrapWidth;
+    }
+    function currentLayoutConfig() {
+      return {
+        hGap: Number(rngHGap.value),
+        vGap: Number(rngVGap.value),
+        rootHGap: Number(rngRootGap.value),
+        wrapWidth: Number(rngWrap.value)
+      };
+    }
+    function onLayoutChange() {
+      const cfg = currentLayoutConfig();
+      document.getElementById("val-hgap").textContent = cfg.hGap;
+      document.getElementById("val-vgap").textContent = cfg.vGap;
+      document.getElementById("val-rootgap").textContent = cfg.rootHGap;
+      document.getElementById("val-wrap").textContent = cfg.wrapWidth;
+      applyLayoutSettings(cfg);
+      if (state.currentMap) {
+        state.currentMap.layoutConfig = cfg; // 随文档保存
+        renderMindMap();
+        markUnsaved();
+      }
+    }
+    [rngHGap, rngVGap, rngRootGap, rngWrap].forEach(r => {
+      r.addEventListener("input", onLayoutChange);
+    });
+    document.getElementById("btn-layout-settings").onclick = (e) => {
+      e.stopPropagation();
+      const willShow = layoutPopover.style.display !== "flex";
+      document.querySelectorAll(".popover").forEach(el => { el.style.display = "none"; });
+      layoutPopover.style.display = willShow ? "flex" : "none";
+      if (willShow) syncLayoutPanel(state.currentMap && state.currentMap.layoutConfig);
+    };
+    document.getElementById("btn-layout-close").onclick = () => { layoutPopover.style.display = "none"; };
+    document.getElementById("btn-layout-reset").onclick = () => {
+      syncLayoutPanel(LAYOUT_DEFAULTS);
+      onLayoutChange();
+    };
+    layoutPopover.onclick = (e) => e.stopPropagation();
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#layout-popover") && !e.target.closest("#btn-layout-settings")) {
+        layoutPopover.style.display = "none";
+      }
+    });
+    document.getElementById("btn-theme-select").onclick = (e) => {
+      e.stopPropagation();
+      themePopover.style.display = themePopover.style.display === "flex" ? "none" : "flex";
+    };
+    document.querySelectorAll("#theme-popover .pop-item").forEach(item => {
+      item.onclick = () => {
+        const theme = item.getAttribute("data-theme");
+        state.theme = theme;
+        document.body.setAttribute("data-theme", theme);
+        themePopover.style.display = "none";
+        scheduleAutoSave();
+        renderMindMap();
+      };
+    });
+
+    const exportPopover = document.getElementById("export-popover");
+    document.getElementById("btn-export").onclick = (e) => {
+      e.stopPropagation();
+      exportPopover.style.display = exportPopover.style.display === "flex" ? "none" : "flex";
+    };
+
+    document.getElementById("export-json").onclick = () => {
+      exportPopover.style.display = "none";
+      if (!state.currentMap) return;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.currentMap, null, 2));
+      const dl = document.createElement("a");
+      dl.setAttribute("href", dataStr);
+      dl.setAttribute("download", `${state.currentMap.title || "思维导图"}.json`);
+      dl.click();
+    };
+
+    // 读取当前主题的实际颜色（把 CSS 变量解析成真实色值，导出时内联，避免样式丢失）
+    function getThemeColors() {
+      const cs = getComputedStyle(document.body);
+      const pick = (name, fallback) => {
+        const v = cs.getPropertyValue(name);
+        return (v && v.trim()) || fallback;
+      };
+      return {
+        bg: state.theme === "dark" ? "#0f172a" : "#f8fafc",
+        rootBg: pick("--root-bg", "#10b981"),
+        rootColor: pick("--root-color", "#ffffff"),
+        level1Bg: pick("--level1-bg", "#d1fae5"),
+        level1Border: pick("--level1-border", "#6ee7b7"),
+        level1Color: pick("--level1-color", "#065f46"),
+        level2Bg: pick("--level2-bg", "#ffffff"),
+        level2Border: pick("--level2-border", "#d1d5db"),
+        level2Color: pick("--level2-color", "#374151"),
+        summaryBg: pick("--summary-bg", "#fef3c7"),
+        summaryBorder: pick("--summary-border", "#fbbf24"),
+        summaryColor: pick("--summary-color", "#92400e"),
+        freeRootBg: pick("--free-root-bg", "#e0e7ff"),
+        freeRootColor: pick("--free-root-color", "#3730a3"),
+        link: pick("--link-color", "#94a3b8"),
+        labelBg: pick("--label-bg", "#eef2ff"),
+        labelBorder: pick("--label-border", "#c7d2fe"),
+        labelColor: pick("--label-color", "#4338ca")
+      };
+    }
+    // 把克隆 SVG 里所有依赖 CSS 类/变量的样式，全部写成内联属性
+    function inlineSvgStyles(clone, colors) {
+      const setFillStroke = (el, fill, stroke) => {
+        if (fill) el.setAttribute("fill", fill);
+        if (stroke) el.setAttribute("stroke", stroke);
+      };
+      // 连线（先读取行内宽度，随后统一清除 style 属性，避免 var() 覆盖真实色值）
+      clone.querySelectorAll("path.map-link").forEach(el => {
+        const sw = el.style.strokeWidth || "2";
+        el.removeAttribute("style");
+        el.setAttribute("fill", "none");
+        el.setAttribute("stroke", colors.link);
+        el.setAttribute("stroke-width", sw);
+        el.removeAttribute("class");
+      });
+      // 概要大括号
+      clone.querySelectorAll("path.summary-bracket").forEach(el => {
+        el.setAttribute("fill", "none");
+        el.setAttribute("stroke", colors.summaryBorder);
+        el.setAttribute("stroke-width", "2");
+        el.removeAttribute("class");
+      });
+      // 节点矩形 + 文字
+      clone.querySelectorAll("g.node-group").forEach(g => {
+        const rect = g.querySelector("rect.node-rect");
+        const text = g.querySelector("text.node-text");
+        const labels = g.querySelectorAll("rect.node-label-rect");
+        const labelTexts = g.querySelectorAll("text.node-label-text");
+        // 依据原有内联样式判断层级（渲染时已写入 style.fill / style.stroke）
+        const f = rect ? (rect.style.fill || "") : "";
+        const s = rect ? (rect.style.stroke || "") : "";
+        const resolve = (val, fb) => {
+          if (!val) return fb;
+          const m = val.match(/var\(\s*(--[\w-]+)\s*\)/);
+          if (m) {
+            const cv = getComputedStyle(document.body).getPropertyValue(m[1]);
+            return (cv && cv.trim()) || fb;
+          }
+          return val;
+        };
+        if (rect) {
+          rect.removeAttribute("style"); // 关键：移除含 var() 的内联样式，否则会覆盖真实色值
+          rect.setAttribute("fill", resolve(f, colors.level2Bg));
+          rect.setAttribute("stroke", resolve(s, colors.level2Border) === "none" ? "none" : resolve(s, colors.level2Border));
+          rect.setAttribute("stroke-width", "1.5");
+          rect.removeAttribute("class");
+        }
+        if (text) {
+          const fs = text.style.fontSize || "13px";
+          const fw = text.style.fontWeight || "500";
+          const tc = resolve(text.style.fill, colors.level2Color);
+          text.removeAttribute("style"); // 关键：同上
+          text.setAttribute("fill", tc);
+          text.setAttribute("font-family", "system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif");
+          text.setAttribute("font-size", fs);
+          text.setAttribute("font-weight", fw);
+          text.setAttribute("text-anchor", "middle");
+          text.setAttribute("dominant-baseline", "central");
+          text.removeAttribute("class");
+        }
+        labels.forEach(el => {
+          el.setAttribute("fill", colors.labelBg);
+          el.setAttribute("stroke", colors.labelBorder);
+          el.setAttribute("stroke-width", "1");
+          el.removeAttribute("class");
+        });
+        labelTexts.forEach(el => {
+          el.setAttribute("fill", colors.labelColor);
+          el.setAttribute("font-family", "system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif");
+          el.setAttribute("font-size", "11px");
+          el.setAttribute("text-anchor", "middle");
+          el.setAttribute("dominant-baseline", "central");
+          el.removeAttribute("class");
+        });
+      });
+      // 笔记角标等其余元素：清除 style 并给 note-badge 上色
+      clone.querySelectorAll("g.note-badge, rect.note-badge, g.node-note-badge").forEach(el => {
+        el.removeAttribute("style");
+        el.setAttribute("fill", colors.labelBg);
+        el.setAttribute("stroke", colors.labelBorder);
+        el.removeAttribute("class");
+      });
+      clone.querySelectorAll("*").forEach(el => {
+        if (el.removeAttribute && el.getAttribute("style")) el.removeAttribute("style");
+      });
+      // 折叠按钮
+      clone.querySelectorAll("circle.collapse-btn").forEach(el => {
+        el.setAttribute("fill", "#ffffff");
+        el.setAttribute("stroke", colors.level1Border);
+        el.setAttribute("stroke-width", "1.2");
+        el.removeAttribute("class");
+      });
+      clone.querySelectorAll("text.collapse-text").forEach(el => {
+        el.setAttribute("fill", colors.level2Color);
+        el.setAttribute("font-size", "11px");
+        el.setAttribute("text-anchor", "middle");
+        el.setAttribute("dominant-baseline", "central");
+        el.removeAttribute("class");
+      });
+    }
+    function exportToPng() {
+      exportPopover.style.display = "none";
+      if (!state.currentMap) return;
+      // 1. 精确计算内容包围盒（含所有节点、标签、概要框）
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const collect = (node) => {
+        if (!node || node._x === undefined) return;
+        const w = node._w || 0, h = node._h || 0;
+        minX = Math.min(minX, node._x - w / 2);
+        maxX = Math.max(maxX, node._x + w / 2);
+        minY = Math.min(minY, node._y - h / 2);
+        maxY = Math.max(maxY, node._y + h / 2);
+        if (node.children && !node._collapsed) node.children.forEach(collect);
+        if (node.summaries && !node._collapsed) node.summaries.forEach(s => {
+          if (s._bracketStartX !== undefined) {
+            minX = Math.min(minX, s._bracketStartX);
+            maxX = Math.max(maxX, s._bracketStartX + 20);
+            minY = Math.min(minY, s._bracketMinY);
+            maxY = Math.max(maxY, s._bracketMaxY);
+          }
+          if (s.topic) collect(s.topic);
+        });
+      };
+      collect(state.currentMap.root);
+      if (Array.isArray(state.currentMap.freeRoots)) state.currentMap.freeRoots.forEach(collect);
+      if (!isFinite(minX)) { minX = -200; maxX = 200; minY = -150; maxY = 150; }
+      const pad = 40;
+      const contentW = Math.max(1, maxX - minX);
+      const contentH = Math.max(1, maxY - minY);
+      const exportW = Math.ceil(contentW + pad * 2);
+      const exportH = Math.ceil(contentH + pad * 2);
+      // 2. 克隆 SVG 并内联所有样式（关键：否则导出后 CSS 变量失效 → 黑底黑字）
+      const colors = getThemeColors();
+      const svgClone = svg.cloneNode(true);
+      svgClone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      svgClone.setAttribute("width", exportW);
+      svgClone.setAttribute("height", exportH);
+      svgClone.setAttribute("viewBox", `0 0 ${exportW} ${exportH}`);
+      svgClone.style.background = colors.bg;
+      svgClone.removeAttribute("class");
+      svgClone.removeAttribute("style");
+      svgClone.setAttribute("style", `background:${colors.bg};`);
+      const vg = svgClone.querySelector("#viewport-group");
+      vg.setAttribute("transform", `translate(${-minX + pad}, ${-minY + pad})`);
+      inlineSvgStyles(svgClone, colors);
+      // 3. 渲染到 canvas（2 倍高清）
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+      const canvas = document.createElement("canvas");
+      const scale = 2;
+      canvas.width = exportW * scale;
+      canvas.height = exportH * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+      const img = new Image();
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = () => {
+        ctx.fillStyle = colors.bg;
+        ctx.fillRect(0, 0, exportW, exportH);
+        ctx.drawImage(img, 0, 0, exportW, exportH);
+        URL.revokeObjectURL(url);
+        const a = document.createElement("a");
+        a.download = `${state.currentMap.title || "思维导图"}.png`;
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+        setSyncStatus("saved", "已导出高清 PNG 图片");
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        alert("导出图片失败，请重试");
+      };
+      img.src = url;
+    }
+    document.getElementById("export-png").onclick = exportToPng;
+
+    /* =========================================================================
+     * 16. 全格式脑图导入引擎
+     * ========================================================================= */
+    const universalInput = document.getElementById("universal-file-input");
+    const dropZone = document.getElementById("drop-zone");
+
+    function openImportModal() { importModal.style.display = "block"; }
+    function closeImportModal() { importModal.style.display = "none"; }
+    document.getElementById("btn-open-import").onclick = openImportModal;
+    document.getElementById("btn-close-import").onclick = closeImportModal;
+    document.getElementById("btn-cancel-import").onclick = closeImportModal;
+    dropZone.onclick = () => universalInput.click();
+
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = "rgba(16, 185, 129, 0.12)"; };
+    dropZone.ondragleave = () => { dropZone.style.background = ""; };
+    dropZone.ondrop = (e) => {
+      e.preventDefault();
+      dropZone.style.background = "";
+      if (e.dataTransfer.files.length > 0) uploadAndImportFile(e.dataTransfer.files[0]);
+    };
+
+    universalInput.onchange = (e) => {
+      if (e.target.files.length > 0) uploadAndImportFile(e.target.files[0]);
+    };
+
+    async function uploadAndImportFile(file) {
+      if (!file) return;
+      // 导入后会切换到新文档：先走未保存保护，避免当前修改丢失
+      await confirmLeaveUnsaved();
+      setSyncStatus("syncing", `正在导入并解析「${file.name}」...`);
+      try {
+        const resp = await fetch(`${API_BASE}/api/map/import?filename=${encodeURIComponent(file.name)}`, {
+          method: "POST",
+          body: file
+        });
+        if (!resp.ok) {
+          const errJson = await resp.json();
+          throw new Error(errJson.error || "导入服务响应异常");
+        }
+        const result = await resp.json();
+        closeImportModal();
+        if (result && result.id) {
+          await loadCurrentMap(result.id);
+          resetView();
+          alert(`成功导入「${result.title}」！`);
+        }
+      } catch (err) {
+        alert("导入失败: " + err.message);
+        setSyncStatus("error", "导入失败");
+      }
+    }
+
+    /* =========================================================================
+     * 17. 帮助模态框
+     * ========================================================================= */
+    const helpModal = document.getElementById("help-modal");
+    document.getElementById("btn-help").onclick = () => { helpModal.style.display = "block"; };
+    document.getElementById("btn-close-help").onclick = () => { helpModal.style.display = "none"; };
+
+    /* =========================================================================
+     * 18. 初始挂载与居中渲染
+     * ========================================================================= */
+    window.onload = () => {
+      loadCurrentMap();
+      setTimeout(resetView, 120);
+    };
+  </script>
+<div id="save-toast"><span>💾</span><span id="save-toast-msg">已保存</span></div>
+</body>
+</html>

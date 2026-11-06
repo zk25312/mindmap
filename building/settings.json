@@ -1,0 +1,6 @@
+{
+  "multiPlatform": false,
+  "platforms": [],
+  "serverDir": "app/server",
+  "copyToOutput": true
+}

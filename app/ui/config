@@ -1,0 +1,14 @@
+{
+  ".url": {
+    "mindmap.main": {
+      "title": "思维导图",
+      "icon": "images/icon_{0}.png",
+      "type": "iframe",
+      "protocol": "",
+      "gatewayPrefix": "/app/mindmap",
+      "gatewaySocket": "app.sock",
+      "url": "/app/mindmap",
+      "allUsers": true
+    }
+  }
+}
